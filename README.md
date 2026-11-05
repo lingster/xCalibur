@@ -57,6 +57,22 @@ block-FP8 (sm_89) and INT8 W8A8 (sm_86) GEMM kits.
 and API contracts. The [data](data/README.md) and
 [notebooks](notebooks/README.md) hold the supporting observations and visual analyses.
 
+## Use with Claude Code
+
+The [`xcalibur-method`](plugins/xcalibur-method/README.md) plugin packages the
+research method as two Claude Code skills: `ooda-coach`, a coachable OODA loop
+for any experiment-driven work, and `kernel-campaign`, for GPU inference and
+kernel speedups. You coach; Claude pre-registers predictions, reports noise
+floors, reviews each run and keeps your corrections in an append-only
+`LESSONS.md` that it reads at the start of every session.
+
+```text
+/plugin marketplace add xArmory/xCalibur
+/plugin install xcalibur-method@xcalibur
+```
+
+A local checkout also works for testing: `/plugin marketplace add ./path/to/xCalibur`.
+
 ## License
 
 [Apache 2.0](LICENSE). The H200 MoE builds on work by vjeux, alygg77 and Matsvei;
