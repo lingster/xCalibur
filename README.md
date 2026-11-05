@@ -9,18 +9,18 @@ choices make the consequences of a design concrete.
 
 ## The organizing problem
 
-Given a computation and hardware contract $C$, construct a compatible physical
+Given a computation and hardware contract $`C`$, construct a compatible physical
 realization and optimize its complete execution:
 
-$$
+```math
 \Pi^*(C)\in\arg\min_{\Pi\in\Omega_\nu(C),\ \operatorname{Pass}_C(\Pi)}J_C(\Pi),
 \qquad \Pi=(\Gamma,\mathbf S,\boldsymbol\alpha,\omega).
-$$
+```
 
-Here $J_C$ aggregates complete-operation latency over the declared workloads,
-and $\Omega_\nu(C)$ is the construction language's candidate space.
-$\Gamma$ is the construction program, $\mathbf S$ its shapes,
-$\boldsymbol\alpha$ its coordinate mappings, and $\omega$ its execution bindings.
+Here $`J_C`$ aggregates complete-operation latency over the declared workloads,
+and $`\Omega_\nu(C)`$ is the construction language's candidate space.
+$`\Gamma`$ is the construction program, $`\mathbf S`$ its shapes,
+$`\boldsymbol\alpha`$ its coordinate mappings, and $`\omega`$ its execution bindings.
 These choices share constraints. CuTe/PyCuTe makes the coordinate algebra
 executable; WarpSpeed expresses squads, resources and phases. Search explores
 compatible completions, while the knowledge base and agent workflow preserve

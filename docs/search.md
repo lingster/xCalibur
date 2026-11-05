@@ -13,16 +13,18 @@ fact; a complete implementation can earn a measured value.
 <a id="codesign-game"></a>
 ## The co-design game
 
-Fix a context $C=(P,H,W,\mathcal G,\mathcal E,B)$: the operator and numerical
+Fix a context $`C=(P,H,W,\mathcal G,\mathcal E,B)`$: the operator and numerical
 contract, hardware/compiler context, workloads and metric, construction grammar,
 evaluators, and research budget. In the complete-design game, group the physical
 choices as
 
-$$\Pi=(\Gamma,\sigma,L,\tau,I),$$
+```math
+\Pi=(\Gamma,\sigma,L,\tau,I),
+```
 
-where $\Gamma$ is dataflow and materialization, $\sigma$ is the CTA/squad plan,
-$L$ contains storage and fragment layouts, $\tau$ is scheduling and dispatch,
-and $I$ selects instruction/decode constructions. These fields are coupled:
+where $`\Gamma`$ is dataflow and materialization, $`\sigma`$ is the CTA/squad plan,
+$`L`$ contains storage and fragment layouts, $`\tau`$ is scheduling and dispatch,
+and $`I`$ selects instruction/decode constructions. These fields are coupled:
 changing a consumer's fragment can require a different packing and producer.
 
 A graph node is a complete design. An edge is a declared move: rebind a field,
@@ -31,15 +33,19 @@ from another archived construction. An archive root carries its history and
 unexplored neighbourhood; a losing overall result can still contain a useful
 component. The constructor grammar determines which moves are executable.
 
-For a load $\ell$, the recorded paired value is
+For a load $`\ell`$, the recorded paired value is
 
-$$\widehat J_\ell(\Pi)=\log\operatorname{median}_i
-\frac{t^{(i)}_{\mathrm{ref},\ell}}{t^{(i)}_{\Pi,\ell}}.$$
+```math
+\widehat J_\ell(\Pi)=\log\operatorname{median}_i
+\frac{t^{(i)}_{\mathrm{ref},\ell}}{t^{(i)}_{\Pi,\ell}}.
+```
 
-Under an equal geometric-mean objective over loads $W$,
+Under an equal geometric-mean objective over loads $`W`$,
 
-$$\widehat{\mathcal S}(\Pi)=
-\exp\!\left(\frac{1}{|W|}\sum_{\ell\in W}\widehat J_\ell(\Pi)\right).$$
+```math
+\widehat{\mathcal S}(\Pi)=
+\exp\!\left(\frac{1}{|W|}\sum_{\ell\in W}\widehat J_\ell(\Pi)\right).
+```
 
 The reference, workload and measurement protocol stay fixed for a comparison.
 The log objective separates algebraically by load. The design decisions separate
@@ -50,21 +56,27 @@ A coordinated cross-build change must be evaluated as a coordinated design.
 
 The structural formulation retains choices before they form a complete kernel:
 
-$$s=(X,D,K^+,K^-,O,R,E,b,h).$$
+```math
+s=(X,D,K^+,K^-,O,R,E,b,h).
+```
 
-$X$ holds bound choices and remaining domains; $D$ records dependencies;
-$K^+,K^-$ contain established and refuted contextual claims; $O$ lists open
-obligations; $R$ describes resources, allocations and lifetimes; $E$ contains
-applicable evidence; $b$ is remaining budget; and $h$ is the action history.
-A claim in neither knowledge plane is unknown, and $K^+\cap K^-=\varnothing$.
+$`X`$ holds bound choices and remaining domains; $`D`$ records dependencies;
+$`K^+,K^-`$ contain established and refuted contextual claims; $`O`$ lists open
+obligations; $`R`$ describes resources, allocations and lifetimes; $`E`$ contains
+applicable evidence; $`b`$ is remaining budget; and $`h`$ is the action history.
+A claim in neither knowledge plane is unknown, and $`K^+\cap K^-=\varnothing`$.
 
 An action names a typed constructor or checker and the binding versions it read.
-For Boolean prerequisites $P_a$, forbidden bits $F_a$, and clear/set masks
-$\Delta_a^-,\Delta_a^+$, a compact guard and update are
+For Boolean prerequisites $`P_a`$, forbidden bits $`F_a`$, and clear/set masks
+$`\Delta_a^-,\Delta_a^+`$, a compact guard and update are
 
-$$(X\land P_a)=P_a,\qquad X\land F_a=0,$$
+```math
+(X\land P_a)=P_a,\qquad X\land F_a=0,
+```
 
-$$X'=(X\land\neg\Delta_a^-)\lor\Delta_a^+.$$
+```math
+X'=(X\land\neg\Delta_a^-)\lor\Delta_a^+.
+```
 
 Bitsets make these checks cheap. They index richer records: integer extents,
 original scale coordinates, allocation aliases, event order and source identity.
@@ -80,10 +92,12 @@ budget can therefore be a different research position.
 <a id="conditional-subgames"></a>
 ## Conditional subgames
 
-Let $\operatorname{Complete}_C(s)$ be the eligible complete constructions
+Let $`\operatorname{Complete}_C(s)`$ be the eligible complete constructions
 reachable from a partial state. Its ideal engineering continuation value is
 
-$$V_C(s)=\sup_{\Pi\in\operatorname{Complete}_C(s)}\mathcal S(\Pi).$$
+```math
+V_C(s)=\sup_{\Pi\in\operatorname{Complete}_C(s)}\mathcal S(\Pi).
+```
 
 The best measured completion gives evidence about this value. A slow sampled
 completion does not bound all its siblings from above. No eligible completion
@@ -92,17 +106,19 @@ remain an explicit outside option.
 
 A subgame freezes a boundary contract
 
-$$B_s=(\text{values and precision},\text{owners and maps},
+```math
+B_s=(\text{values and precision},\text{owners and maps},
 \text{ready/retirement events},\text{resource envelope},
-\text{external bindings},\text{evidence versions}).$$
+\text{external bindings},\text{evidence versions}).
+```
 
 The outer search chooses the boundary; an inner solver returns compatible
 implementations under it. It keeps alternatives whose resource use, layout or
 lowering may matter to the continuation. A decoder solver, a movement/fragment
 solver and a squad/phase constructor can be different inner solvers.
 
-For example, an invertible bit-linear decoder $D$ with reference map $P$ determines its
-packing $T=D^{-1}P$. Deriving $T$ eliminates a search variable. It does not decide
+For example, an invertible bit-linear decoder $`D`$ with reference map $`P`$ determines its
+packing $`T=D^{-1}P`$. Deriving $`T`$ eliminates a search variable. It does not decide
 which ownership, decode instruction spelling or enclosing pipeline will be fast.
 Those remain continuations of the exact map.
 
@@ -164,14 +180,18 @@ algebraically.
 ## Rank candidates, then measure their completions
 
 The measured game uses a bootstrap ensemble of LightGBM regressors. For features
-$x(\Pi)$ and ensemble predictions $f_k$, define
+$`x(\Pi)`$ and ensemble predictions $`f_k`$, define
 
-$$\mu_\ell(\Pi)=\frac1K\sum_{k=1}^K f_{k,\ell}(x(\Pi)),\qquad
-s_\ell(\Pi)=\operatorname{sd}_k f_{k,\ell}(x(\Pi)).$$
+```math
+\mu_\ell(\Pi)=\frac1K\sum_{k=1}^K f_{k,\ell}(x(\Pi)),\qquad
+s_\ell(\Pi)=\operatorname{sd}_k f_{k,\ell}(x(\Pi)).
+```
 
 Its exploration score is
 
-$$A_\ell(\Pi)=\mu_\ell(\Pi)+\kappa s_\ell(\Pi)-J_\ell(\Pi_{\mathrm{ref}}).$$
+```math
+A_\ell(\Pi)=\mu_\ell(\Pi)+\kappa s_\ell(\Pi)-J_\ell(\Pi_{\mathrm{ref}}).
+```
 
 Features include design fields, decoder-map bits, resource counts and compiler
 observations. Before compilation, a ranker sees what the design declares; after
@@ -187,10 +207,12 @@ The public [`Game`](../xcalibur/game.py) implements the following progression:
 4. Screen candidates, then confirm promising designs alongside the fixed reference.
 5. Pool confirmation evidence by validated build identity and recommend bindings.
 
-For repeated relative gains $g_i=t_{\mathrm{ref},i}/t_{\Pi,i}-1$, the public
+For repeated relative gains $`g_i=t_{\mathrm{ref},i}/t_{\Pi,i}-1`$, the public
 [`Evidence`](../xcalibur/stats.py) binding rule is
 
-$$n\ge n_{\min},\qquad \overline g>m,\qquad \min_i g_i>0.$$
+```math
+n\ge n_{\min},\qquad \overline g>m,\qquad \min_i g_i>0.
+```
 
 This repeat-and-margin rule is a selection heuristic. It is separate from the
 bootstrap intervals provided by the statistics module. One candidate nominated
@@ -204,26 +226,30 @@ MCTS controllers and complete-operator constructors belong to separate harnesses
 ## Backward reasoning and what may close a branch
 
 Forward construction asks what can be built. Backward reasoning asks what would
-have to change to meet a target. Let $\Delta=|W|\log(\mathcal S^*/\mathcal S_0)$
-be the required total log-gain. Given stated per-load floors $F_\ell$, a planning
-allocation can use modeled headroom $h_\ell=\log(T_\ell/F_\ell)$, assuming positive
-floors, nonnegative headroom and $\sum_j h_j>0$:
+have to change to meet a target. Let $`\Delta=|W|\log(\mathcal S^*/\mathcal S_0)`$
+be the required total log-gain. Given stated per-load floors $`F_\ell`$, a planning
+allocation can use modeled headroom $`h_\ell=\log(T_\ell/F_\ell)`$, assuming positive
+floors, nonnegative headroom and $`\sum_j h_j>0`$:
 
-$$r_\ell=T_\ell\left(1-\exp\left[-\Delta
-\frac{h_\ell}{\sum_j h_j}\right]\right).$$
+```math
+r_\ell=T_\ell\left(1-\exp\left[-\Delta
+\frac{h_\ell}{\sum_j h_j}\right]\right).
+```
 
-$r_\ell$ is the assigned latency reduction. It is useful when the floors and
+$`r_\ell`$ is the assigned latency reduction. It is useful when the floors and
 allocation assumptions are meaningful. A floor derived from empirical bandwidth
 or a baseline time slice need not survive a change in reuse, ownership or fusion.
 The allocation therefore prioritizes experiments rather than proving that other
 architectures cannot work.
 
-For a move affecting only loads $U\subseteq W$, the corresponding optimistic
+For a move affecting only loads $`U\subseteq W`$, the corresponding optimistic
 scope screen is
 
-$$\mathcal S_{\mathrm{screen}}(U)=\mathcal S(\Pi)
+```math
+\mathcal S_{\mathrm{screen}}(U)=\mathcal S(\Pi)
 \exp\left[\frac1{|W|}\sum_{\ell\in U}\log
-\frac{T_\ell(\Pi)}{F_\ell}\right].$$
+\frac{T_\ell(\Pi)}{F_\ell}\right].
+```
 
 This becomes a pruning certificate only if each floor applies to every remaining
 completion under the same metric and context. A sampled loss, low ranker score,
@@ -253,20 +279,22 @@ players with invented preferences.
 
 For the finite PyCuTe verification game,
 
-$$g(c,q)=\begin{cases}
+```math
+g(c,q)=\begin{cases}
 +1 & \text{construction }c\text{ passes query }q,\\
 -1 & \text{query }q\text{ produces a scoped contradiction}.
-\end{cases}$$
+\end{cases}
+```
 
 Retaining the qualified parent without making a new construction claim was a
 separate zero-valued action. An unexecuted cell was unknown, not zero. The
-constructor maximizes $g$ and the challenger minimizes it. Since the challenger
-sees $c$, its policy depends on that construction; a simultaneous matrix with one
+constructor maximizes $`g`$ and the challenger minimizes it. Since the challenger
+sees $`c`$, its policy depends on that construction; a simultaneous matrix with one
 fixed query per column would describe a different game.
 
 A proposed performance-synthesis utility used a bounded transform of a qualified
-score, $j(c)=\widehat{\mathcal S}(c)/(1+\widehat{\mathcal S}(c))$, and assigned
-hard-contract violations $-1$. The executed PyCuTe learning episode instead used
+score, $`j(c)=\widehat{\mathcal S}(c)/(1+\widehat{\mathcal S}(c))`$, and assigned
+hard-contract violations $`-1`$. The executed PyCuTe learning episode instead used
 the verification utility. This keeps the question the agent learned to answer
 explicit: surviving those queries did not supply an unmeasured hardware payoff.
 
@@ -290,14 +318,18 @@ original ReBeL method and its upstream implementation are credited in the
 
 At each public state, the solver builds a depth-limited subgame. Known terminal
 queries keep their exact utilities; nonterminal cutoffs use the current value
-table. Fresh local regrets produce an average strategy. For player $i$ at history
-$h$, the update uses the opponent's reach probability:
+table. Fresh local regrets produce an average strategy. For player $`i`$ at history
+$`h`$, the update uses the opponent's reach probability:
 
-$$R_i^{t+1}(h,a)=R_i^t(h,a)+\rho_{-i}^t(h)
-\bigl(v_i^t(h,a)-v_i^t(h)\bigr),$$
+```math
+R_i^{t+1}(h,a)=R_i^t(h,a)+\rho_{-i}^t(h)
+\bigl(v_i^t(h,a)-v_i^t(h)\bigr),
+```
 
-$$\pi_i^{t+1}(a\mid h)=
-\frac{[R_i^{t+1}(h,a)]_+}{\sum_{a'}[R_i^{t+1}(h,a')]_+}.$$
+```math
+\pi_i^{t+1}(a\mid h)=
+\frac{[R_i^{t+1}(h,a)]_+}{\sum_{a'}[R_i^{t+1}(h,a')]_+}.
+```
 
 A zero denominator selects a uniform strategy. Average-policy targets weight
 strategies by the player's own reach. The subgame supplies a value target and
@@ -310,12 +342,16 @@ The final policy is extracted in coherent depth-sized chunks, with new solves at
 chunk boundaries. Exact full-tree best responses then audit this learned policy.
 They were not substituted for the policy during training.
 
-For constructor policy $\pi_C$, challenger policy $\pi_Q$ and constructor utility
-$U$, the improvement gaps are
+For constructor policy $`\pi_C`$, challenger policy $`\pi_Q`$ and constructor utility
+$`U`$, the improvement gaps are
 
-$$\epsilon_C=\max_{\sigma_C}U(\sigma_C,\pi_Q)-U(\pi_C,\pi_Q),$$
+```math
+\epsilon_C=\max_{\sigma_C}U(\sigma_C,\pi_Q)-U(\pi_C,\pi_Q),
+```
 
-$$\epsilon_Q=U(\pi_C,\pi_Q)-\min_{\sigma_Q}U(\pi_C,\sigma_Q).$$
+```math
+\epsilon_Q=U(\pi_C,\pi_Q)-\min_{\sigma_Q}U(\pi_C,\sigma_Q).
+```
 
 The audit reports both and their sum over the complete admitted tree, including
 histories unvisited during self-play. The recorded runs had nonzero gaps. These

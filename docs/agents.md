@@ -20,9 +20,11 @@ a construction means, where it came from, and what happened when it was tried.
 
 A compact representation is
 
-$$G=(V,E,\tau_V,\tau_E,p),$$
+```math
+G=(V,E,\tau_V,\tau_E,p),
+```
 
-where $\tau_V$ and $\tau_E$ give node and relation types, and $p$ retains
+where $`\tau_V`$ and $`\tau_E`$ give node and relation types, and $`p`$ retains
 provenance. Several connected graphs have distinct meanings:
 
 | Graph | Objects and relations | Use |
@@ -74,17 +76,19 @@ helps locate those records; the underlying records carry their meaning.
 BM25 supplies a lexical ranking for exact names and mechanisms. Normalized query
 and document encoders supply a semantic ranking:
 
-$$s_{\mathrm{dense}}(q,v)=\langle E_q(q),E_d(v)\rangle.$$
+```math
+s_{\mathrm{dense}}(q,v)=\langle E_q(q),E_d(v)\rangle.
+```
 
 The local research KB combines them with reciprocal-rank fusion:
 
-$$
+```math
 s_{\mathrm{RRF}}(v)=
 \sum_{r\in\{\mathrm{lexical},\mathrm{dense}\}}
 \frac{1}{c+\operatorname{rank}_r(v)}.
-$$
+```
 
-Its implementation uses $c=60$ and zero-based ranks, limits repeated hits from
+Its implementation uses $`c=60`$ and zero-based ranks, limits repeated hits from
 one source, and supports record-kind filters. An agent can inspect CuTe/PTX
 sources without mixing them with an earlier empirical cost model.
 
@@ -118,17 +122,19 @@ is a scoped, falsifiable hypothesis for the agenda, followed by a new check.
 
 For one-edit relations between complete designs,
 
-$$N(v)=\{u:(v,u)\in E_{\mathrm{one\text{-}edit}}\}.$$
+```math
+N(v)=\{u:(v,u)\in E_{\mathrm{one\text{-}edit}}\}.
+```
 
 When observations share a reference and measurement contract, the observed
-effect of a field change $f:a\to b$ can be summarized by
+effect of a field change $`f:a\to b`$ can be summarized by
 
-$$
+```math
 \delta_\ell(f:a\to b)=
 \operatorname{median}_{(u,v)}\frac{\rho_\ell(v)}{\rho_\ell(u)},
-$$
+```
 
-where $\rho_\ell$ is speedup against that reference for load $\ell$.
+where $`\rho_\ell`$ is speedup against that reference for load $`\ell`$.
 This can reveal which loads a field affects or recover a useful part of a design
 that lost overall. It describes observed contexts; it is not an additive latency
 law or a proof that the neighbourhood contains a global optimum.
@@ -137,10 +143,10 @@ law or a proof that the neighbourhood contains a global optimum.
 
 A graph-informed move records its provenance before selection:
 
-$$
+```math
 \text{query or seed}\to\text{source edges}\to\text{applicable fact}
 \to\text{construction choice}\to\text{obligations}\to\text{outcome}.
-$$
+```
 
 Actual traversal establishes navigation. A fact that changes the selected
 construction establishes a decision role. A performance benefit from graph
@@ -157,19 +163,21 @@ falsifiable brief, and a lesson becomes a check where the mistake could recur.
 
 A compact description of the agent's state is
 
-$$X_t=(C_t,F_t,E_t,K_t,B_t,q_t),$$
+```math
+X_t=(C_t,F_t,E_t,K_t,B_t,q_t),
+```
 
-with task/constraints $C_t$, design frontier $F_t$, experiment record $E_t$,
-retrievable knowledge $K_t$, remaining budget $B_t$, and execution phase $q_t$.
+with task/constraints $`C_t`$, design frontier $`F_t`$, experiment record $`E_t`$,
+retrievable knowledge $`K_t`$, remaining budget $`B_t`$, and execution phase $`q_t`$.
 This notation describes the protocol; the research implementation stores its
 state and artifacts in files.
 
 An action advances that state when its applicable gate passes:
 
-$$
+```math
 X_{t+1}=\operatorname{Transition}(X_t,a_t,r_t),
 \qquad \operatorname{Gate}(q_t,a_t,C_t,E_t)=\mathrm{pass}.
-$$
+```
 
 The research harness stores phases `entered`, `briefed`, `ran` and `iar`.
 Its commands bind the transition to artifacts:
@@ -228,10 +236,10 @@ diagnosis or pivot is sound.
 
 The update is operational:
 
-$$
+```math
 \text{failure}\to\text{reviewed mechanism}\to
 \text{decision-time predicate}\to\text{tool check}.
-$$
+```
 
 A no-op measured on an unaffected build becomes a reach check. A timing mismatch
 becomes a protocol identity and requalification requirement. A forgotten prior
@@ -280,12 +288,12 @@ WarpSpeed and PTX reasoning must all describe the same complete operator.
 - **Evidence:** prior-art applicability and each obligation's pass/pending/fail
   status, evaluator and falsifier.
 
-For a buffer generation $g$, the lifetime obligation includes
+For a buffer generation $`g`$, the lifetime obligation includes
 
-$$
+```math
 \operatorname{publish}(g)\prec\operatorname{read}(g),\qquad
 \operatorname{lastRead}(g)\prec\operatorname{overwrite}(g+1),
-$$
+```
 
 under the actual participant sets and memory visibility rules. A filled field
 points to the reasoning or test that establishes these relations; it does not
@@ -293,7 +301,9 @@ prove them by itself.
 
 At evaluation time, a passed receipt binds the candidate's source identity:
 
-$$h_{\mathrm{source}}(\mathrm{receipt})=h(\mathrm{candidate}).$$
+```math
+h_{\mathrm{source}}(\mathrm{receipt})=h(\mathrm{candidate}).
+```
 
 The wrapper checks file hashes and required evidence states. Offline coordinate
 and lifetime obligations remain distinct from target compilation and runtime
@@ -314,18 +324,18 @@ correctness and timing evidence. Each result retains that attribution.
 
 A plan transition can be written
 
-$$
+```math
 P_0\sim q_\theta(\cdot\mid C,h,R),\qquad
 \Delta P\sim r_\phi(\cdot\mid P_0,C,h,R,\mathrm{checks}),\qquad
 P_1=P_0\oplus\Delta P,
-$$
+```
 
-where $C$ is the computation/numerical contract, $h$ the hardware context, and
-$R$ the retrieved source context. A patch invalidates affected facts; its new
+where $`C`$ is the computation/numerical contract, $`h`$ the hardware context, and
+$`R`$ the retrieved source context. A patch invalidates affected facts; its new
 obligations must be checked again.
 
 The planner can execute PyCuTe expressions while constructing the plan. For
-ownership map $O$ and storage layout $L$, the address map is $A=L\circ O$.
+ownership map $`O`$ and storage layout $`L`$, the address map is $`A=L\circ O`$.
 An execution record connects the source symbol and expression to the affected
 plan field. Layout checks, resource calculations and synchronization claims
 retain their separate evaluators.
@@ -335,12 +345,14 @@ completion of missing plan decisions, and repair from concrete counterexamples.
 
 ### Teach a policy over connected completions
 
-For the partial state $z$ in the [formulation](formulation.md#graph-completion),
-retrieval $\mathcal R(z)$ supplies source-linked construction records. The
+For the partial state $`z`$ in the [formulation](formulation.md#graph-completion),
+retrieval $`\mathcal R(z)`$ supplies source-linked construction records. The
 proposed policy ranks live actions:
 
-$$a\sim\pi_\phi(\cdot\mid z,\mathcal R(z)),\qquad
-z'=\operatorname{Close}_C(z\cup\{a\}).$$
+```math
+a\sim\pi_\phi(\cdot\mid z,\mathcal R(z)),\qquad
+z'=\operatorname{Close}_C(z\cup\{a\}).
+```
 
 The teacher erases selected decisions from a verified construction, preserving
 shared holes and surrounding constraints. Closure propagates a proposed binding
@@ -349,21 +361,25 @@ through the connected program and returns consequences or a contradiction.
 The supervision has two meanings. A **construction label** identifies a
 completion that satisfies its stated checks; it need not be unique or fastest.
 A **performance label** needs measured complete continuations. For the observed
-continuations $\mathcal M(z,a)$ of an action,
+continuations $`\mathcal M(z,a)`$ of an action,
 
-$$\widehat Q(z,a)=
-\min_{\Pi\in\mathcal M(z,a)}\widehat T_C(\Pi).$$
+```math
+\widehat Q(z,a)=
+\min_{\Pi\in\mathcal M(z,a)}\widehat T_C(\Pi).
+```
 
-Here $\widehat T_C$ is complete-operation latency under the fixed contract.
+Here $`\widehat T_C`$ is complete-operation latency under the fixed contract.
 Unmeasured actions have unknown labels. Timing noise and unequal exploration
 remain attached to the evidence; the minimum observed is not an optimality proof.
-For a workload aggregate, use the declared objective $J_C$ in place of latency.
+For a workload aggregate, use the declared objective $`J_C`$ in place of latency.
 
 A weighted supervised objective is
 
-$$\mathcal L_{\mathrm{SFT}}(\phi)=
+```math
+\mathcal L_{\mathrm{SFT}}(\phi)=
 -\sum_{d\in\mathcal D_{\mathrm{train}}}
-w_d\log\pi_\phi(a_d\mid z_d,\mathcal R_d),\qquad w_d\ge0.$$
+w_d\log\pi_\phi(a_d\mid z_d,\mathcal R_d),\qquad w_d\ge0.
+```
 
 Split source and implementation ancestry **before** generating descendants or
 retrieval indexes. Keep construction replay separate from actual search traces.
@@ -375,13 +391,15 @@ not imply that a general completion compiler or trained scheduler is distributed
 ## 6. Anvil: place the models inside the search
 
 Anvil's integration design combines this memory and role split with exact checks,
-constructors and measured search. For a workload $p$, assemble context from the
+constructors and measured search. For a workload $`p`$, assemble context from the
 design listing, retrieved sources, the incumbent and the planner's own earlier outcomes:
 
-$$C_p=(\operatorname{listing}(G),\operatorname{retrieve}(p),c_p,M_p).$$
+```math
+C_p=(\operatorname{listing}(G),\operatorname{retrieve}(p),c_p,M_p).
+```
 
-The planner proposes a typed design $x$. The checker returns diagnostics
-$\Delta(x)$; the refiner proposes a repair; search completes the fields left
+The planner proposes a typed design $`x`$. The checker returns diagnostics
+$`\Delta(x)`$; the refiner proposes a repair; search completes the fields left
 open. The constructor then lowers the completed design, followed by compiler,
 numerical and complete-operation checks.
 

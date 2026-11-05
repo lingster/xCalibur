@@ -6,15 +6,15 @@ one H200) [M].
 
 ## The computation
 
-For token $t$ with routes $s = 1..8$, expert $e_{t,s}$ and router weight $w_{t,s}$:
+For token $`t`$ with routes $`s = 1..8`$, expert $`e_{t,s}`$ and router weight $`w_{t,s}`$:
 
-$$
+```math
 h_{t,s} = \operatorname{SiLU}\!\big(x_t W^{g}_{e}\big) \odot \big(x_t W^{u}_{e}\big), \qquad
 y_{t,s} = (h_{t,s} W^{d}_{e}) \odot (1 + \gamma), \qquad
 \text{out}_t = \sum_s w_{t,s}\, \frac{y_{t,s}}{\operatorname{rms}(y_{t,s})} .
-$$
+```
 
-Each weight is a 4-bit E2M1 code $c$ times a per-16-value scale: $W_{ij} = \operatorname{e2m1}(c_{ij})\,\sigma_{i,\lfloor j/16 \rfloor}$.
+Each weight is a 4-bit E2M1 code $`c`$ times a per-16-value scale: $`W_{ij} = \operatorname{e2m1}(c_{ij})\,\sigma_{i,\lfloor j/16 \rfloor}`$.
 
 The kernel runs it in one launch:
 
@@ -24,9 +24,9 @@ The kernel runs it in one launch:
    pool of tail units claimed atomically.
 3. **Final pass**: the weighted, normalized sum per token, after a grid barrier.
 
-The build is chosen by token count $M$:
+The build is chosen by token count $`M`$:
 
-| $M$ | Build | Serves |
+| $`M`$ | Build | Serves |
 |---|---|---|
 | 1 | one-token program build (grouped HFMA2, below) | decode 1 |
 | 2–4, 5–8 | two skinny-only builds | verify 1 (8 tokens) |
@@ -40,8 +40,8 @@ Every change was **selected by measurement** (paired, judge-method timing next t
 prediction. Changes 1 and 6 were in our starting kernel; 2–5 came out of the search described in the docs.
 
 1. **Sign-folded SwiGLU.** In `prepare()`, the gate/up codes get their sign bits flipped (`w13 ^ 0x88`, a lossless
-   XOR on both 4-bit codes in each byte). The kernel now holds $g' = -g$ and $u' = -u$, and
-   $\operatorname{SiLU}(g)\,u = \dfrac{g\,u}{1 + e^{-g}} = \dfrac{g'\,u'}{1 + e^{g'}}$, so the exponent needs no negation.
+   XOR on both 4-bit codes in each byte). The kernel now holds $`g' = -g`$ and $`u' = -u`$, and
+   $`\operatorname{SiLU}(g)\,u = \dfrac{g\,u}{1 + e^{-g}} = \dfrac{g'\,u'}{1 + e^{g'}}`$, so the exponent needs no negation.
 2. **A new weight decoder with a proven packing.** The decode from packed codes to BF16 fields is a linear map over
    GF(2) (see [notebook 01](../../notebooks/01_decoders_over_gf2.ipynb) and the [decoder formulation](../../docs/formulation.md#gf2)).
    We enumerated all 1,816 legal decoder graphs and measured hundreds of them. The shipped decoder is
@@ -51,16 +51,16 @@ prediction. Changes 1 and 6 were in our starting kernel; 2–5 came out of the s
    r2 = rotl(q, 10)    & 0x81C081C0;   r3 = (rotl(q, 12) ^ q) & 0x81C081C0;
    ```
 
-   It produces the same values as the original decode only after the weights are repacked by $T = D^{-1}P$, applied
-   in `prepare()` as a 32-entry XOR table (`_XC_COLS`). $D\,T = P$ holds for all $2^{32}$ words, so the result is
-   bit-identical. Unlike a pure bit shuffle, this $T$ mixes bits with XOR, which only an exact GF(2) view finds.
-3. **Grouped HFMA2 for one token.** With $M = 1$, an `mma` tile with 8 token columns uses only one. The one-token build
+   It produces the same values as the original decode only after the weights are repacked by $`T = D^{-1}P`$, applied
+   in `prepare()` as a 32-entry XOR table (`_XC_COLS`). $`D\,T = P`$ holds for all $`2^{32}`$ words, so the result is
+   bit-identical. Unlike a pure bit shuffle, this $`T`$ mixes bits with XOR, which only an exact GF(2) view finds.
+3. **Grouped HFMA2 for one token.** With $`M = 1`$, an `mma` tile with 8 token columns uses only one. The one-token build
    multiplies on CUDA cores instead: decoded weights and activations as packed BF16 pairs, `__hfma2` accumulation
    within each 16-value scale group, one conversion to FP32 per group, then the group scale:
 
-   $$
+   ```math
    \text{acc} \mathrel{+}= \sigma_g \cdot \operatorname{sum}\Big(\textstyle\sum_{k \in g} \text{w}_{k} \cdot \text{x}_{k}\Big)_{\text{bf16x2}}
-   $$
+   ```
 
    Alone it gained +0.4% on decode 1, and the new decoder alone +0.9%; together, **+3.3%** (12 seeds × 2) [M]. The two
    only pay off together (see the [interaction figure](../../docs/figures/moe_interaction.png)).
@@ -70,7 +70,7 @@ prediction. Changes 1 and 6 were in our starting kernel; 2–5 came out of the s
 5. **A per-size build for decode 32.** The measured search bound three knobs of the large-batch build on decode 32:
    gather 4 activation rows per batch instead of 8 (`OKC_GATHB=4`), don't start phase A with the trailing partial
    unit (`OKC_WGSREORD=0`), and flush deferred stream-K work behind stage group 4 instead of 3 (`OKC_WGSFCI=4`).
-   The same knobs hurt other loads, so they get their own build for $17 \le M \le 63$; every other load keeps
+   The same knobs hurt other loads, so they get their own build for $`17 \le M \le 63`$; every other load keeps
    identical code. On the judge, decode 32 went from 123.0 µs to 121.4 µs [M].
 6. **Diagnostics removed.** The base file's development timing helpers are gone; nothing in the file synchronizes
    with the host or times itself outside `prepare()`.

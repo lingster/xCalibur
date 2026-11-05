@@ -86,17 +86,17 @@ families. Some runs had implementation defects; others tested a particular wait
 schedule, ring depth or staging path. Their results did not settle every
 completion sharing a mechanism name.
 
-Let $s$ be a partial design and $\Pi_0$ one of its eligible completions. Using the
-[physical objective](formulation.md#contract) $J_C$ and the
+Let $`s`$ be a partial design and $`\Pi_0`$ one of its eligible completions. Using the
+[physical objective](formulation.md#contract) $`J_C`$ and the
 [search completion set](search.md#conditional-subgames), even if one completion
 has a worse objective,
 
-$$
+```math
 J_C(\Pi_0) > J_C(\Pi_{\mathrm{ref}})
 \quad\not\Rightarrow\quad
 \forall\Pi\in\operatorname{Complete}_C(s),\;
 J_C(\Pi) > J_C(\Pi_{\mathrm{ref}}).
-$$
+```
 
 The campaign record therefore needs both the observation and its **binding
 conditions**: what construction was actually tested, whether the proposed
@@ -118,9 +118,9 @@ shared-resource interaction or decomposition cost introduced by the new design.
 
 A compact calibration diagnostic is the log prediction error
 
-$$
+```math
 e_i=\log\frac{T_i^{\mathrm{observed}}}{\widehat T_i},
-$$
+```
 
 where both times refer to the same workload and evaluation protocol. Positive
 values mean the prediction was optimistic. Grouping these errors by physical

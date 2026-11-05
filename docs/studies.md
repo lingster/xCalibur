@@ -23,7 +23,9 @@ became a concrete design revision, rather than another unverified estimate.
 
 For grouped-query attention,
 
-$$o_h=\operatorname{softmax}(q_hK_{g(h)}^\top)V_{g(h)}.$$
+```math
+o_h=\operatorname{softmax}(q_hK_{g(h)}^\top)V_{g(h)}.
+```
 
 The design choices affected the physical work behind that expression:
 
@@ -49,14 +51,18 @@ historical vLLM integration harness are not bundled.
 ## H200: the complete NVFP4 MoE
 
 The challenge operator combines routing, gate/up projection, activation, down
-projection, normalization and weighted accumulation. For token $t$ and routed
-expert $e(t,s)$, its structure is
+projection, normalization and weighted accumulation. For token $`t`$ and routed
+expert $`e(t,s)`$, its structure is
 
-$$y_{t,s}=W_2^{(e)}\bigl(\operatorname{silu}(W_g^{(e)}x_t)
-\odot W_u^{(e)}x_t\bigr),$$
+```math
+y_{t,s}=W_2^{(e)}\bigl(\operatorname{silu}(W_g^{(e)}x_t)
+\odot W_u^{(e)}x_t\bigr),
+```
 
-$$\operatorname{out}[t]=\sum_s g_{t,s}
-\operatorname{RMSNorm}\bigl((1+w)\odot y_{t,s}\bigr).$$
+```math
+\operatorname{out}[t]=\sum_s g_{t,s}
+\operatorname{RMSNorm}\bigl((1+w)\odot y_{t,s}\bigr).
+```
 
 Weights use NVFP4 codes with group scales and per-expert global scales. A legal
 repacking must preserve both the values and the original scale association.
@@ -107,8 +113,8 @@ kernel sources and the original execution harness are outside the public package
 
 The finite decoder grammar supplies atoms for output bit fields. Pairwise
 compatibility bitsets prune combinations; full-rank checks establish complete
-maps. For an invertible decoder $D$ and reference $P$, the construction derives
-$T=D^{-1}P$ instead of searching packing independently.
+maps. For an invertible decoder $`D`$ and reference $`P`$, the construction derives
+$`T=D^{-1}P`$ instead of searching packing independently.
 
 The production CUDA solver uses count, prefix and emission passes. Its full
 solution set matched the CPU enumerator for the declared grammar. Canonical
@@ -162,7 +168,9 @@ what the grammar can search and which continuations must be retained.
 E2M1's small value alphabet supports exhaustive paired-code/scale tables. Another
 construction decomposes supported BF16 values into E4M3 components,
 
-$$x=h+2^{-r}l,\qquad h,l\in\operatorname{E4M3}.$$
+```math
+x=h+2^{-r}l,\qquad h,l\in\operatorname{E4M3}.
+```
 
 The finite sumset determines exact scalar coverage in a stated exponent window.
 A native consumer additionally needs compatible fragments, scale boundaries,
@@ -181,9 +189,9 @@ The load-pattern study varied TMA streams, lookahead, copies per stream, issue
 staggering and packet order. Copy-only probes checked every consumer byte before
 selected layouts were composed into the complete operator.
 
-For $S$ streams in the studied construction, each stream expected $36864/S$
-bytes and $16/S$ consumer-warp retirement arrivals; its ring organization required
-$6S+6$ barriers including activation rings. Codes and scales moved together when
+For $`S`$ streams in the studied construction, each stream expected $`36864/S`$
+bytes and $`16/S`$ consumer-warp retirement arrivals; its ring organization required
+$`6S+6`$ barriers including activation rings. Codes and scales moved together when
 packet coordinates changed. A decoder transform acted within the packed word.
 
 Dedicated producer warps restored intended overlap in the emitted code, but the
@@ -197,15 +205,17 @@ correction. Those observations are separate from the earlier graph-based runs.
 <a id="complete-operators"></a>
 ## LoRA: the graph includes backward
 
-For frozen quantized $W$ and trainable adapters $A,B$,
+For frozen quantized $`W`$ and trainable adapters $`A,B`$,
 
-$$Y=XW^T+s(XA^T)B^T.$$
+```math
+Y=XW^T+s(XA^T)B^T.
+```
 
 A complete plan includes forward, backward, saved tensors, casts, adapter-gradient
-accumulation and stream joins. Retaining decoded $W$ removes a possible second
-decode; retaining $XA^T$ removes a possible repeated projection. Both decisions
+accumulation and stream joins. Retaining decoded $`W`$ removes a possible second
+decode; retaining $`XA^T`$ removes a possible repeated projection. Both decisions
 extend lifetimes and consume memory. Fusion and scheduling must preserve the
-values and parameter versions required by $dX,dA,dB$.
+values and parameter versions required by $`dX,dA,dB`$.
 
 The checkpoint-linear study compared related recompute/framework and retain/CuTe
 plans. All passed the recorded zero/nonzero-B numerical checks and cumulative
@@ -225,7 +235,9 @@ A later tool loop let a model select a complete-operator construction or supply 
 CUDA function behind a fixed interface. In the constructor route, a request for
 two resident CTAs violated the declared shared-memory budget:
 
-$$2(174848+1024)>233472.$$
+```math
+2(174848+1024)>233472.
+```
 
 The model reduced residency, and the worker generated, compiled, checked and timed
 the complete operator. The candidate was correct on its fixtures and slower than
@@ -253,13 +265,15 @@ training artifacts and original harnesses are not distributed here.
 ## ARC: a representation still needs a semantic rule
 
 ARC transfers the construction approach to grid reasoning. Given demonstrations
-$\mathcal D=\{(x_i,y_i)\}$, a candidate program must first satisfy
+$`\mathcal D=\{(x_i,y_i)\}`$, a candidate program must first satisfy
 
-$$\forall(x_i,y_i)\in\mathcal D,\qquad p(x_i)=y_i.$$
+```math
+\forall(x_i,y_i)\in\mathcal D,\qquad p(x_i)=y_i.
+```
 
 It must then produce the required query outputs without using their labels during
 construction. A transpose illustrates the distinction: its read and write maps
-$R(r,c)=rW+c$ and $D(r,c)=cH+r$ can have exact coverage, while transpose may still
+$`R(r,c)=rW+c`$ and $`D(r,c)=cH+r`$ can have exact coverage, while transpose may still
 be the wrong transformation for the task.
 
 The work explored bounded layout/bit programs, demonstration replay, AST proposals,
