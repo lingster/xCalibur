@@ -14,7 +14,8 @@ experiments. Read them in order, or enter at the question you care about.
    [structural search](search.md#structural-search) and [Rebel](search.md#rebel).
 3. **[Knowledge and agents](agents.md)** — How does work accumulate into better
    decisions? Read the [knowledge base](agents.md#knowledge-base),
-   [retrieval](agents.md#retrieval), [OODA protocol](agents.md#ooda) and
+   [intel, curation and extrapolation](agents.md#intel),
+   [OODA harness](agents.md#ooda), [IAR / AAR / RAP](agents.md#reviews) and
    [Anvil integration](agents.md#anvil).
 4. **[Studies](studies.md)** — Where did these ideas meet an implementation?
    [Gemma 4 / TG4DAC](studies.md#gemma4), [H200 MoE](studies.md#h200),
@@ -26,6 +27,10 @@ implementation, and the evidence collected from it. Equations and worked
 constructions stay with the explanation. Visual analyses live in the
 [notebooks](../notebooks/README.md); measurements and their provenance live in
 [data](../data/README.md).
+
+**[Big-picture reflections](reflections.md)** is a separate cross-campaign
+account: how IARs, AARs and reset and pivot inform strategy, where knowledge failed
+to transfer, and how later evidence corrected earlier assumptions.
 
 ## Run or extend it
 

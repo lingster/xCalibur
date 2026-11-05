@@ -44,9 +44,11 @@ print(result["registers"]["launch_cap"])  # 96
 print(result["smem"]["total_bytes"])     # 208992
 ```
 
-This accounts for the declared rings and barriers. Include auxiliary shared
-storage when checking a complete plan; compiler allocation and native lifetime
-correctness need additional validation.
+This uses the shipped H200 resource profile, which is the default for
+`warpspeed_check`; it does not check SM120 limits. It accounts for the declared
+rings and barriers. Include auxiliary shared storage when checking a complete
+plan; compiler allocation and native lifetime correctness need additional
+validation.
 
 ## Choose the next layer
 
@@ -54,6 +56,7 @@ correctness need additional validation.
 |---|---|---|
 | Rebuild all analyses | `python -m pip install -e ".[notebooks]"`; [notebook guide](../notebooks/README.md) | CPU; no runtime network calls |
 | Run the toy learned search | `python -m pip install -e ".[search]"`; `python examples/measured_game_toy.py` | CPU, LightGBM; synthetic objective |
+| Retrieve related designs | `python -m pip install -e ".[retrieval]"`; [`Retriever` and `embedding_gemma`](../xcalibur/graph.py) | sentence-transformers; access to the selected embedding model and a download unless cached |
 | Time two GPU functions | Install a suitable CUDA-enabled PyTorch; `python examples/paired_bench.py` | CUDA GPU; [measurement protocol](getting-started.md#measurement) |
 | Inspect the H200 operator | [MoE kernel guide](../kernels/moe_w4a16_h200/README.md) | H200, compiler, PyTorch, benchmark-compatible inputs |
 | Run Gemma 4 31B attention / MLP | [TG4DAC kernel guide](../kernels/tg4dac_sm120/README.md) | SM120, CUDA/NVRTC, PyTorch, Triton; attention baseline needs vLLM |

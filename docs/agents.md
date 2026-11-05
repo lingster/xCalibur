@@ -39,7 +39,18 @@ expression does not establish a legal buffer lifetime. A neighbouring measured
 design does not establish the value of an unmeasured completion. These boundaries
 are preserved when records move between graphs.
 
-### Ingestion preserves the unit of reasoning
+<a id="intel"></a>
+### Gather intel, then curate it
+
+Intel collection used a map of actors and channels: workload owners, inference
+engines, library suppliers, research, public implementations and hardware.
+Channel-first sweeps read release indexes, papers, issues and implementations
+before narrowing to mechanism queries. Searching across INT4, NVFP4 and other
+labels can uncover the same low-bit construction. Each lead records its source,
+when it was checked and what it contributes. The research brief gate required
+fresh entries across the source map; that checks coverage of a declared process,
+not completeness of the literature. The gate checks recorded metadata and
+current retrieval hits; it cannot establish that a source was actually read.
 
 The research implementation splits Markdown by section, CUDA by kernel or
 embedded namespace, and Triton/CuTe Python by decorated function. Repeated kernel
@@ -90,10 +101,18 @@ walks the hits' run and mechanism links, and displays the associated ledger
 outcomes and missed phases. If no judged record sits behind the hits, the audit
 reports that the claim is unmeasured.
 
-For an extra prefetch stage, this should recover the candidate source, why it
-was proposed, its resource/compile observations, and the review of the complete
-operation. The next design can then test whether the same ownership, working
-set and target make the earlier result applicable.
+Curated reviews distinguish **[M] measured**, with the source and scope;
+**[D] derived**, with inputs and procedure; **[H] hypothesis**, with a falsifier
+and alternatives still open; and **[X] decision**, with its governing rule.
+These are authoring conventions. The index retrieves the record, including its
+errors; finding a claim does not verify its derivation.
+
+**Extrapolation** carries an applicable mechanism into a new construction. For
+an extra prefetch stage, recover its prior source, resource observations and
+complete-operation review, then compare ownership, working set, target and
+lifetime. State which assumptions transfer and which changed. A measured loss
+can inform the next prediction without vetoing an untested pipeline. The output
+is a scoped, falsifiable hypothesis for the agenda, followed by a new check.
 
 ### Design neighbourhoods
 
@@ -152,23 +171,58 @@ X_{t+1}=\operatorname{Transition}(X_t,a_t,r_t),
 \qquad \operatorname{Gate}(q_t,a_t,C_t,E_t)=\mathrm{pass}.
 $$
 
-The gate checks prerequisites and evidence bindings. The action's result
-supplies the observation. The cycle has five concrete artifacts:
+The research harness stores phases `entered`, `briefed`, `ran` and `iar`.
+Its commands bind the transition to artifacts:
 
-1. **Entry:** current task, rules, target, source revision, baseline, budget and
-   recent outcomes.
-2. **Orientation:** relevant sources, prior experiments, physical obligations
-   and unresolved alternatives.
-3. **Agenda and brief:** ranked alternatives, the selected change, its scope,
-   prediction or explicit unknown, falsifier and expected learning.
-4. **Experiment:** exact candidate identity, declared evaluator and raw result.
-5. **Review:** what happened, what it means, and what changes next.
+1. **Enter:** collect current rules, task, source corpus, baseline, budget,
+   prediction calibration and blocked mechanisms. The later Rebel wrapper
+   rejects incomplete live context and expires entry at the budget-day reset or
+   after 24 hours; a new entry clears the old agenda.
+2. **Agenda:** rank open branches by estimated gain per check, using recorded
+   prediction bias and uncertainty about unmeasured phases. Fresh intel and a
+   proposed repair enter this comparison alongside retained alternatives.
+3. **Brief:** record the selected change, applicable prior art, design-level KB
+   query, phase/estimator audit, competing alternatives, pre-mortem and falsifier.
+   The wrapper requires an agenda and rechecks live rules before accepting it.
+4. **Check:** require an accepted brief, inspect the exact candidate and its
+   receipts, then invoke the target evaluator. Raw results supply ledger rows
+   beside the brief-time predictions; phase becomes `ran`.
+5. **IAR:** while phase is `ran`, another brief is refused until a review names
+   that run. Register the review, then use its findings to update evidence and
+   the next agenda; phase becomes `iar`.
 
-The implemented loop refuses a new brief while the previous run lacks its
-review, and refuses an experiment without an accepted brief. Repeated misses on
-a mechanism trigger a deeper after-action review. A reset-and-pivot plan records
-the revised frontier, retired assumptions, next milestone and stop condition.
-The later physical-board wrapper also rejects stale or incomplete entry context.
+The brief gate distinguishes an improvement bet from calibration. A regime's
+median prediction error corrects the point estimate; a bet must then beat its
+incumbent. An uncovered mechanism is declared and can receive a calibration
+range instead. Calibration observations remain useful without being scored as
+accurate point forecasts. These are campaign decision rules, not latency proofs.
+
+<a id="reviews"></a>
+### IAR, AAR and RAP operate at different scales
+
+**IAR — immediate after-action review of one run.** Compare outcomes with the
+registered prediction and falsifier, identify missed phases and confounds, and record what
+the run cannot tell. Update ledger outcomes, catalog entries and the next action.
+The formal review template separates observations, model error, inference,
+uncertainty and decisions. The implemented gate checks the run identity and the
+first three numbered sections; unfilled missed-phase fields produce a warning.
+It does not validate the review's causal explanation.
+
+**AAR — after-action review of a mechanism or campaign.** Reconstruct the
+decisions across runs, separate what was tested from what remains open, and
+identify the habit behind a repeated failure. The implemented tripwire counts
+cumulative null-or-worse ledger rows on a named mechanism: at three, another brief on it requires a cited
+AAR containing that mechanism's name. Direction changes and predeclared stop
+conditions can also call for an AAR through the research protocol. Its useful
+output is a lesson expressed as a check and a scoped open/parked/closed decision.
+
+**RAP — reset and pivot.** When the AAR calls for a change of direction, restate
+the objective and constraints, recompute the headroom assumptions, and revise
+the estimator, catalog or templates that misled the previous decisions. Name
+the new question, falsifier, milestones and stop-loss; append what happened at
+close-out. RAP is an authored plan feeding the next agenda, not an automatic
+state-machine command. AAR file/name validation cannot establish that the
+diagnosis or pivot is sound.
 
 ### Lessons become invariants
 
@@ -184,10 +238,12 @@ becomes a protocol identity and requalification requirement. A forgotten prior
 experiment becomes a premise audit. An edited candidate becomes a requirement
 for receipts bound to the new source.
 
-After an accepted review, the research harness rebuilds the KB and identifies
-new records awaiting embeddings. The next session can recover both the lesson
-and the evidence behind it. Brief-time predictions stay beside outcomes;
-hindsight cannot silently replace foresight.
+After an accepted IAR, the harness invokes KB rebuilding and lists records
+awaiting embeddings. It records the review state before those refreshes and
+does not roll it back if they fail; successful curation and refresh still need
+inspection. Brief-time predictions stay beside outcomes, so a later explanation
+does not silently replace foresight. Broader synthesis across campaigns belongs
+in [Reflections](reflections.md), separate from these run and decision artifacts.
 
 ### Authority and retained alternatives
 
@@ -318,9 +374,9 @@ not imply that a general completion compiler or trained scheduler is distributed
 <a id="anvil"></a>
 ## 6. Anvil: place the models inside the search
 
-Anvil combines this memory and role split with exact checks, constructors and
-measured search. For a workload $p$, assemble context from the design listing,
-retrieved sources, the incumbent and the planner's own earlier outcomes:
+Anvil's integration design combines this memory and role split with exact checks,
+constructors and measured search. For a workload $p$, assemble context from the
+design listing, retrieved sources, the incumbent and the planner's own earlier outcomes:
 
 $$C_p=(\operatorname{listing}(G),\operatorname{retrieve}(p),c_p,M_p).$$
 

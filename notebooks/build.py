@@ -559,7 +559,7 @@ md(r"""## Query 2: what each field change does, per load
 The median effect of every one-field change away from the shipped values. No one told the graph which build each
 field reaches, yet the table shows it: the dequant arithmetic and the activation staging move **decode 1** and leave
 the other loads within noise, except `sparse_small`, which also moves decode 16 and verify 1, the small builds it is
-compiled into. **The graph rediscovered the reach map from data** (chapter 2 of the docs derives the
+compiled into. **The graph rediscovered the reach map from data** (the physical formulation derives the
 same map from the code)."""),
 code(r"""eff = [e for e in g.effects() if (e["field"], e["from"]) in (("compute", "hfma2_group_d1"), ("activation", "register"))]
 eff = sorted(eff, key=lambda e: e["median"]["d1"])
