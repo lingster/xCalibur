@@ -94,7 +94,7 @@ has a worse objective,
 ```math
 J_C(\Pi_0) > J_C(\Pi_{\mathrm{ref}})
 \quad\not\Rightarrow\quad
-\forall\Pi\in\operatorname{Complete}_C(s),\;
+\forall\Pi\in\mathrm{Complete}_C(s),\;
 J_C(\Pi) > J_C(\Pi_{\mathrm{ref}}).
 ```
 

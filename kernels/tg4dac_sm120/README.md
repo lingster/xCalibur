@@ -20,7 +20,7 @@ Gemma 4 31B attention, per layer, against vLLM's Triton attention kernel. Attent
 refiner's training, so these designs are its work on an unseen operator.
 
 ```math
-o_h = \operatorname{softmax}\!\big(q_h K_{g(h)}^{\top}\big)\, V_{g(h)}, \qquad
+o_h = \mathrm{softmax}\!\big(q_h K_{g(h)}^{\top}\big)\, V_{g(h)}, \qquad
 \begin{cases}
 \text{sliding: } 32\ \text{Q} / 16\ \text{KV heads},\ d = 256,\ \text{last } 1024 \text{ positions}\\
 \text{global: } 32\ \text{Q} / 4\ \text{KV heads},\ d = 512,\ \text{all positions}
@@ -31,7 +31,7 @@ o_h = \operatorname{softmax}\!\big(q_h K_{g(h)}^{\top}\big)\, V_{g(h)}, \qquad
 |---|---|---|
 | Launch constants (prefill) | planner | vLLM's kernel unchanged, run with the planner's tile and launch choices |
 | Window trim (sliding decode) | planner | re-base each sequence on the first cache page its 1024-token window touches, so vLLM's kernel stops scanning evicted pages |
-| V-only cache (global decode) | planner | cache only $`V`$ and rebuild $`K = \operatorname{RoPE}(w_k \odot V)`$ in the kernel; for the 384 unrotated dims $`K\cdot q = V\cdot(w_k \odot q)`$, so $`w_k`$ folds into $`q`$ and every cached byte is read once |
+| V-only cache (global decode) | planner | cache only $`V`$ and rebuild $`K = \mathrm{RoPE}(w_k \odot V)`$ in the kernel; for the 384 unrotated dims $`K\cdot q = V\cdot(w_k \odot q)`$, so $`w_k`$ folds into $`q`$ and every cached byte is read once |
 | WarpSpeed prefill | refiner | a load squad streams Q and K / V through `cp.async` + mbarrier rings into a compute squad running `mma.sync` m16n8k16 |
 | WarpSpeed decode | refiner | one load warp fills a KV page ring for three compute warps, window bounds in-kernel (sliding); a 4 + 4 warp split over a V-only ring (global) |
 
@@ -50,7 +50,7 @@ scales), with rank-16 LoRA on every projection,
 
 ```math
 g = XW_g^{\top} + 2\,(XA_g^{\top})B_g^{\top}, \quad u = XW_u^{\top} + 2\,(XA_u^{\top})B_u^{\top}, \quad
-Y = \big(\operatorname{GELU}(g) \odot u\big) W_d^{\top} + 2\,(\cdots)A_d^{\top}B_d^{\top},
+Y = \big(\mathrm{GELU}(g) \odot u\big) W_d^{\top} + 2\,(\cdots)A_d^{\top}B_d^{\top},
 ```
 
 with the 4-bit weights decoded inside every forward. The file holds the hand-written kernels the models were asked to

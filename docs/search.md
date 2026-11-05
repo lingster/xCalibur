@@ -36,7 +36,7 @@ component. The constructor grammar determines which moves are executable.
 For a load $`\ell`$, the recorded paired value is
 
 ```math
-\widehat J_\ell(\Pi)=\log\operatorname{median}_i
+\widehat J_\ell(\Pi)=\log\mathrm{median}_i
 \frac{t^{(i)}_{\mathrm{ref},\ell}}{t^{(i)}_{\Pi,\ell}}.
 ```
 
@@ -92,11 +92,11 @@ budget can therefore be a different research position.
 <a id="conditional-subgames"></a>
 ## Conditional subgames
 
-Let $`\operatorname{Complete}_C(s)`$ be the eligible complete constructions
+Let $`\mathrm{Complete}_C(s)`$ be the eligible complete constructions
 reachable from a partial state. Its ideal engineering continuation value is
 
 ```math
-V_C(s)=\sup_{\Pi\in\operatorname{Complete}_C(s)}\mathcal S(\Pi).
+V_C(s)=\sup_{\Pi\in\mathrm{Complete}_C(s)}\mathcal S(\Pi).
 ```
 
 The best measured completion gives evidence about this value. A slow sampled
@@ -184,7 +184,7 @@ $`x(\Pi)`$ and ensemble predictions $`f_k`$, define
 
 ```math
 \mu_\ell(\Pi)=\frac1K\sum_{k=1}^K f_{k,\ell}(x(\Pi)),\qquad
-s_\ell(\Pi)=\operatorname{sd}_k f_{k,\ell}(x(\Pi)).
+s_\ell(\Pi)=\mathrm{sd}_k f_{k,\ell}(x(\Pi)).
 ```
 
 Its exploration score is

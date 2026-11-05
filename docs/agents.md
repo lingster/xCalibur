@@ -85,7 +85,7 @@ The local research KB combines them with reciprocal-rank fusion:
 ```math
 s_{\mathrm{RRF}}(v)=
 \sum_{r\in\{\mathrm{lexical},\mathrm{dense}\}}
-\frac{1}{c+\operatorname{rank}_r(v)}.
+\frac{1}{c+\mathrm{rank}_r(v)}.
 ```
 
 Its implementation uses $`c=60`$ and zero-based ranks, limits repeated hits from
@@ -131,7 +131,7 @@ effect of a field change $`f:a\to b`$ can be summarized by
 
 ```math
 \delta_\ell(f:a\to b)=
-\operatorname{median}_{(u,v)}\frac{\rho_\ell(v)}{\rho_\ell(u)},
+\mathrm{median}_{(u,v)}\frac{\rho_\ell(v)}{\rho_\ell(u)},
 ```
 
 where $`\rho_\ell`$ is speedup against that reference for load $`\ell`$.
@@ -175,8 +175,8 @@ state and artifacts in files.
 An action advances that state when its applicable gate passes:
 
 ```math
-X_{t+1}=\operatorname{Transition}(X_t,a_t,r_t),
-\qquad \operatorname{Gate}(q_t,a_t,C_t,E_t)=\mathrm{pass}.
+X_{t+1}=\mathrm{Transition}(X_t,a_t,r_t),
+\qquad \mathrm{Gate}(q_t,a_t,C_t,E_t)=\mathrm{pass}.
 ```
 
 The research harness stores phases `entered`, `briefed`, `ran` and `iar`.
@@ -291,8 +291,8 @@ WarpSpeed and PTX reasoning must all describe the same complete operator.
 For a buffer generation $`g`$, the lifetime obligation includes
 
 ```math
-\operatorname{publish}(g)\prec\operatorname{read}(g),\qquad
-\operatorname{lastRead}(g)\prec\operatorname{overwrite}(g+1),
+\mathrm{publish}(g)\prec\mathrm{read}(g),\qquad
+\mathrm{lastRead}(g)\prec\mathrm{overwrite}(g+1),
 ```
 
 under the actual participant sets and memory visibility rules. A filled field
@@ -351,7 +351,7 @@ proposed policy ranks live actions:
 
 ```math
 a\sim\pi_\phi(\cdot\mid z,\mathcal R(z)),\qquad
-z'=\operatorname{Close}_C(z\cup\{a\}).
+z'=\mathrm{Close}_C(z\cup\{a\}).
 ```
 
 The teacher erases selected decisions from a verified construction, preserving
@@ -395,7 +395,7 @@ constructors and measured search. For a workload $`p`$, assemble context from th
 design listing, retrieved sources, the incumbent and the planner's own earlier outcomes:
 
 ```math
-C_p=(\operatorname{listing}(G),\operatorname{retrieve}(p),c_p,M_p).
+C_p=(\mathrm{listing}(G),\mathrm{retrieve}(p),c_p,M_p).
 ```
 
 The planner proposes a typed design $`x`$. The checker returns diagnostics

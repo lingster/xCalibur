@@ -30,12 +30,12 @@ supported complete candidates. One objective is
 
 ```math
 \Pi^*\in\arg\min_{\substack{\Pi\in\Omega_\nu(C)\\
-\operatorname{Pass}_C(\Pi)}}J_C(\Pi),\qquad
+\mathrm{Pass}_C(\Pi)}}J_C(\Pi),\qquad
 J_C(\Pi)=\sum_{p\in\mathcal W}w_p\log T_p(\Pi),
 ```
 
 with $`w_p\ge0`$ and $`\sum_p w_p=1`$. Here $`T_p`$ is complete-operation latency under
-the declared protocol, and $`\operatorname{Pass}_C`$ is implementation admission.
+the declared protocol, and $`\mathrm{Pass}_C`$ is implementation admission.
 Equal weights give geometric-mean latency; a speedup objective against a fixed
 reference gives the same ordering.
 
@@ -72,9 +72,9 @@ coordinate construction explicit.
 For each value edge, record
 
 ```math
-\Phi_e(i)=\bigl(\operatorname{owner}(i),\operatorname{storage}(i),
-\operatorname{address}(i),\operatorname{ready}(i),
-\operatorname{lastUse}(i)\bigr).
+\Phi_e(i)=\bigl(\mathrm{owner}(i),\mathrm{storage}(i),
+\mathrm{address}(i),\mathrm{ready}(i),
+\mathrm{lastUse}(i)\bigr).
 ```
 
 Ownership includes CTA, warpgroup, warp, lane and local slot, with intentional
@@ -84,8 +84,8 @@ are events in a partial order, before a concrete instruction schedule exists.
 For storage generation $`g`$, require
 
 ```math
-\operatorname{ready}_{e,g}\prec\operatorname{consume}_{e,g},\qquad
-\operatorname{lastUse}_{e,g}\prec\operatorname{overwrite}_{e,g+1}.
+\mathrm{ready}_{e,g}\prec\mathrm{consume}_{e,g},\qquad
+\mathrm{lastUse}_{e,g}\prec\mathrm{overwrite}_{e,g+1}.
 ```
 
 The implementation must realize that order at the participating hardware scope.
@@ -95,8 +95,8 @@ design; coordinate equality cannot supply it.
 For compiler context $`\kappa`$, the enclosing correctness obligation is
 
 ```math
-\operatorname{unpack}_{out}\circ
-\operatorname{Exec}(C_\kappa(\Pi))\circ\operatorname{pack}_{in}
+\mathrm{unpack}_{out}\circ
+\mathrm{Exec}(C_\kappa(\Pi))\circ\mathrm{pack}_{in}
 \simeq_N\mathcal O.
 ```
 
@@ -188,7 +188,7 @@ For the morphism $`f`$ represented by $`\alpha`$, derive $`L_f=S:D_f`$ with leaf
 ```
 
 For flat coordinates, $`\varphi_{L_f}(x)=\sum_i(d_f)_ix_i`$ and
-$`\Phi_{L_f}=\varphi_{L_f}\circ\operatorname{colex}_S^{-1}`$. Thus selecting the
+$`\Phi_{L_f}=\varphi_{L_f}\circ\mathrm{colex}_S^{-1}`$. Thus selecting the
 wiring determines the encoded layout. [Colfax, Construction 3.1.2.1](https://arxiv.org/html/2601.05972v1#S3.SS1.SSS2)
 
 ### Composition propagates a decision
@@ -268,7 +268,7 @@ and dependencies, and $`\mathcal E_z`$ holds permitted evidence. An action selec
 a supported constructor or binds a shared decision. The transition is
 
 ```math
-z'=\operatorname{Close}_C(z\cup\{a\}).
+z'=\mathrm{Close}_C(z\cup\{a\}).
 ```
 
 Closure propagates composition/refinement constraints, derives layouts and
@@ -307,7 +307,7 @@ A finite grammar can supply partial decoder atoms. If atom row sets $`A`$ and $`
 have disjoint output fields, their independent join requires
 
 ```math
-\operatorname{rank}(A\cup B)=|A|+|B|.
+\mathrm{rank}(A\cup B)=|A|+|B|.
 ```
 
 Pairwise compatibility bitsets prune the product, but pairwise independence alone
@@ -337,7 +337,7 @@ For squad warp counts $`w_s`$, resource stages $`k_r`$, byte strides $`b_r`$ and
 counts $`q_r`$, the modeled arrival and shared-memory accounting is
 
 ```math
-\operatorname{arrivals}(p)=32\sum_{s\in\operatorname{owners}(p)}w_s,
+\mathrm{arrivals}(p)=32\sum_{s\in\mathrm{owners}(p)}w_s,
 ```
 
 ```math

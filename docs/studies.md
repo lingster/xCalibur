@@ -24,7 +24,7 @@ became a concrete design revision, rather than another unverified estimate.
 For grouped-query attention,
 
 ```math
-o_h=\operatorname{softmax}(q_hK_{g(h)}^\top)V_{g(h)}.
+o_h=\mathrm{softmax}(q_hK_{g(h)}^\top)V_{g(h)}.
 ```
 
 The design choices affected the physical work behind that expression:
@@ -55,13 +55,13 @@ projection, normalization and weighted accumulation. For token $`t`$ and routed
 expert $`e(t,s)`$, its structure is
 
 ```math
-y_{t,s}=W_2^{(e)}\bigl(\operatorname{silu}(W_g^{(e)}x_t)
+y_{t,s}=W_2^{(e)}\bigl(\mathrm{silu}(W_g^{(e)}x_t)
 \odot W_u^{(e)}x_t\bigr),
 ```
 
 ```math
-\operatorname{out}[t]=\sum_s g_{t,s}
-\operatorname{RMSNorm}\bigl((1+w)\odot y_{t,s}\bigr).
+\mathrm{out}[t]=\sum_s g_{t,s}
+\mathrm{RMSNorm}\bigl((1+w)\odot y_{t,s}\bigr).
 ```
 
 Weights use NVFP4 codes with group scales and per-expert global scales. A legal
@@ -169,7 +169,7 @@ E2M1's small value alphabet supports exhaustive paired-code/scale tables. Anothe
 construction decomposes supported BF16 values into E4M3 components,
 
 ```math
-x=h+2^{-r}l,\qquad h,l\in\operatorname{E4M3}.
+x=h+2^{-r}l,\qquad h,l\in\mathrm{E4M3}.
 ```
 
 The finite sumset determines exact scalar coverage in a stated exponent window.

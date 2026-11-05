@@ -9,12 +9,12 @@ one H200) [M].
 For token $`t`$ with routes $`s = 1..8`$, expert $`e_{t,s}`$ and router weight $`w_{t,s}`$:
 
 ```math
-h_{t,s} = \operatorname{SiLU}\!\big(x_t W^{g}_{e}\big) \odot \big(x_t W^{u}_{e}\big), \qquad
+h_{t,s} = \mathrm{SiLU}\!\big(x_t W^{g}_{e}\big) \odot \big(x_t W^{u}_{e}\big), \qquad
 y_{t,s} = (h_{t,s} W^{d}_{e}) \odot (1 + \gamma), \qquad
-\text{out}_t = \sum_s w_{t,s}\, \frac{y_{t,s}}{\operatorname{rms}(y_{t,s})} .
+\text{out}_t = \sum_s w_{t,s}\, \frac{y_{t,s}}{\mathrm{rms}(y_{t,s})} .
 ```
 
-Each weight is a 4-bit E2M1 code $`c`$ times a per-16-value scale: $`W_{ij} = \operatorname{e2m1}(c_{ij})\,\sigma_{i,\lfloor j/16 \rfloor}`$.
+Each weight is a 4-bit E2M1 code $`c`$ times a per-16-value scale: $`W_{ij} = \mathrm{e2m1}(c_{ij})\,\sigma_{i,\lfloor j/16 \rfloor}`$.
 
 The kernel runs it in one launch:
 
@@ -41,7 +41,7 @@ prediction. Changes 1 and 6 were in our starting kernel; 2–5 came out of the s
 
 1. **Sign-folded SwiGLU.** In `prepare()`, the gate/up codes get their sign bits flipped (`w13 ^ 0x88`, a lossless
    XOR on both 4-bit codes in each byte). The kernel now holds $`g' = -g`$ and $`u' = -u`$, and
-   $`\operatorname{SiLU}(g)\,u = \dfrac{g\,u}{1 + e^{-g}} = \dfrac{g'\,u'}{1 + e^{g'}}`$, so the exponent needs no negation.
+   $`\mathrm{SiLU}(g)\,u = \dfrac{g\,u}{1 + e^{-g}} = \dfrac{g'\,u'}{1 + e^{g'}}`$, so the exponent needs no negation.
 2. **A new weight decoder with a proven packing.** The decode from packed codes to BF16 fields is a linear map over
    GF(2) (see [notebook 01](../../notebooks/01_decoders_over_gf2.ipynb) and the [decoder formulation](../../docs/formulation.md#gf2)).
    We enumerated all 1,816 legal decoder graphs and measured hundreds of them. The shipped decoder is
@@ -59,7 +59,7 @@ prediction. Changes 1 and 6 were in our starting kernel; 2–5 came out of the s
    within each 16-value scale group, one conversion to FP32 per group, then the group scale:
 
    ```math
-   \text{acc} \mathrel{+}= \sigma_g \cdot \operatorname{sum}\Big(\textstyle\sum_{k \in g} \text{w}_{k} \cdot \text{x}_{k}\Big)_{\text{bf16x2}}
+   \text{acc} \mathrel{+}= \sigma_g \cdot \mathrm{sum}\Big(\textstyle\sum_{k \in g} \text{w}_{k} \cdot \text{x}_{k}\Big)_{\text{bf16x2}}
    ```
 
    Alone it gained +0.4% on decode 1, and the new decoder alone +0.9%; together, **+3.3%** (12 seeds × 2) [M]. The two

@@ -13,7 +13,7 @@ Given a computation and hardware contract $`C`$, construct a compatible physical
 realization and optimize its complete execution:
 
 ```math
-\Pi^*(C)\in\arg\min_{\Pi\in\Omega_\nu(C),\ \operatorname{Pass}_C(\Pi)}J_C(\Pi),
+\Pi^*(C)\in\arg\min_{\Pi\in\Omega_\nu(C),\ \mathrm{Pass}_C(\Pi)}J_C(\Pi),
 \qquad \Pi=(\Gamma,\mathbf S,\boldsymbol\alpha,\omega).
 ```
 
