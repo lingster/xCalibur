@@ -183,8 +183,9 @@ Since only a cheaper format moves the state-pass GEMMs, two kits study that dire
 - **[`fp8_block_sm89`](../../kernels/fp8_block_sm89/README.md)** asks how far production's block-FP8 Triton GEMM is
   from what the Ada card can do, and how much of the gap closes without changing an output bit. A probe put stock at
   150–162 TFLOPS at 28k tokens against a practical ceiling near 210 TFLOPS [M]. The kit runs the
-  [measured game](../search.md#measured-search) per (N, K) with M buckets as loads, one build per bucket. Its tuned
-  results are pending.
+  [measured game](../search.md#measured-search) per (N, K) with M buckets as loads, one build per bucket. Restricted
+  to builds that are bitwise equal to stock, its 21-entry table made a full production replay ×1.05 faster (three ABBA
+  pairs, ×1.049–1.052) with every answer bit-identical [M].
 - **[`w8a8_sm86`](../../kernels/w8a8_sm86/README.md)** puts INT8 W8A8 linears on the 3090, whose INT8 tensor rate is
   four times its bf16 rate. It measured 2.81× on a state pass's projections and 1.84× end to end; SmoothQuant and
   per-128 activation scales held 1.81× at about half the drift [M]. Nothing measured passes the answer gate, so it is
