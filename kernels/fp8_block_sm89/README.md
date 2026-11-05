@@ -246,7 +246,13 @@ and `tables/ada_rtx6000_bitwise_r1.json`. Tests: `tests/test_fp8_block_{robust,s
 
 **E5** (round-2 table alone, 6 MLP and N=1024 entries) against the production FP8 path: ×1.015, ×1.016, ×1.016 in
 three ABBA pairs on the full smoke set (105 requests, 599 answers). A/A ×1.000 both ways. max|dp| = 0 in every pair:
-the answers are bit-identical. E6 (both rounds, 21 entries) is pending.
+the answers are bit-identical.
+
+**E6** (both rounds combined, 21 entries): ×1.049, ×1.052, ×1.049 in three ABBA pairs (2,691–2,695 → 2,826–2,830
+tok/s), A/A ×0.999 and ×1.001, max|dp| = 0 on all 599 answers. That is **+5.0% end to end with bit-identical answers**,
+above the pre-registered ×1.020–1.035. The prediction weighted round 1 by its share of FLOPs. It should have weighted
+by measured time per M bucket: round 1's small-M entries (m64/m512, ×1.4–3.0 steady) carry the question rows, which
+run as short passes.
 
 **Combining rounds:** production loads one table, so `combine.py` merges ship.py tables from separate rounds.
 - It checks the rules `kev_patch.py` enforces at load time up front: shippable, every config in the bitwise class,
