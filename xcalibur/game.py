@@ -27,13 +27,16 @@ class Game:
     frontier(history)          -> list of designs (dicts) not yet measured
     featurize(design, compiled)-> feature vector; compiled is the compile record or None
     compile(designs)           -> one compile record ({"ok": bool, ...}) per design, in order
-    measure(designs, grade)    -> one {load: positive finite speedup} per design, covering every configured load;
+    measure(designs, grade)    -> one {load: positive finite speedup} per design, covering every load it reaches
+                                  (the incumbent: every configured load);
                                   all ratios use the same external baseline, grade in {"screen", "confirm"};
                                   at "confirm" the first design is the incumbent, timed in the same session
     reach                      -> a validated ReachMap (reaches / declared build identity per load)
 
   The incumbent is frozen for the life of this game. Start fresh evidence and
   history when changing the reference, hardware, compiler or timing protocol.
+  ``surrogate`` passes keyword arguments to each round's Surrogate (e.g. {"backend": "ridge"}).
+  ``confirm(designs)`` times designs outside a round, e.g. leaders of a seed screen, under the same rules.
 
   Examples:
     g = Game(loads, reach, incumbent, frontier, featurize, compile, measure)
@@ -53,6 +56,7 @@ class Game:
   nominate: float = 0.006
   margin: float = 0.005
   min_samples: int = 2
+  surrogate: dict = field(default_factory=dict)     # Surrogate kwargs, e.g. {"backend": "ridge"}
   history: list = field(default_factory=list)       # [{"design", "loads": {load: speedup}, "weight"}]
   evidence: Evidence = field(default_factory=Evidence)
   compiled: dict = field(default_factory=dict)
@@ -95,14 +99,46 @@ class Game:
 
   def _measure(self, designs, grade):
     rows = self._batch(self.measure, designs, grade)
-    for loads in rows:
+    for d, loads in zip(designs, rows):
       self._check_loads(loads)
-      if not set(self.loads).issubset(loads):
-        raise ValueError("measurement must cover every configured load")
+      # The reference row covers every load; another design may omit a load it does not reach
+      # (no distinct build there, e.g. a per-size build that does not apply to that size).
+      needed = set(self.loads) if self._key(d) == self._reference_key else {
+        L for L in self.loads if self.reach.reaches(L, d, self.incumbent)}
+      if not needed.issubset(loads):
+        raise ValueError("measurement must cover every configured load the design reaches")
     return [{L: float(v) for L, v in loads.items()} for loads in rows]
 
   def _record(self, design, loads, weight):
     self.history.append(copy.deepcopy({"design": design, "loads": loads, "weight": weight}))
+
+  def confirm(self, designs) -> None:
+    """Time designs at confirm grade next to the incumbent (same session) and add their gains to the evidence.
+
+    Each design contributes at most one observation per (load, declared build identity) per call.
+    """
+    designs = list(designs)
+    if not designs:
+      return
+    if self._key(self.incumbent) != self._reference_key:
+      raise ValueError("incumbent reference changed; start a new Game with fresh history and evidence")
+    rows = self._measure([self.incumbent] + designs, "confirm")
+    ctl = rows[0]
+    observations = {}
+    for d, loads in zip(designs, rows[1:]):
+      for L in self.loads:
+        if self.reach.reaches(L, d, self.incumbent):
+          gain = loads[L] / ctl[L] - 1
+          if not math.isfinite(gain) or gain <= -1:
+            raise ValueError("confirmation ratio must be finite and positive")
+          # Aliases sharing a build in this round are correlated observations.
+          # Keep the first, never the most favorable, for that load and identity.
+          observations.setdefault((L, self.reach.identity(L, d)), (gain, d))
+    self._record(self.incumbent, ctl, 6.0)
+    for d, loads in zip(designs, rows[1:]):
+      self._record(d, loads, 6.0)
+    for (L, identity), (gain, d) in observations.items():
+      self.evidence.add(L, identity, gain, d)
 
   def round(self) -> dict:
     if self._key(self.incumbent) != self._reference_key:
@@ -121,7 +157,7 @@ class Game:
       sur = None
       chosen = cl[:self.per_load]
       if len(rows) >= 12:
-        sur = Surrogate().fit([self.featurize(h["design"], self.compiled.get(self._key(h["design"]))) for h in rows],
+        sur = Surrogate(**self.surrogate).fit([self.featurize(h["design"], self.compiled.get(self._key(h["design"]))) for h in rows],
                             [math.log(h["loads"][L]) for h in rows], [h.get("weight", 1.0) for h in rows])
         chosen = [cl[i] for i, _, _ in sur.top([self.featurize(c, None) for c in cl], self.per_load, self.kappa, ref[L])]
       for design in chosen:
@@ -153,24 +189,7 @@ class Game:
       d = entry["design"]
       if any(math.log(loads[L]) > ref[L] + self.nominate for L in entry["rankers"]):
         confirm.setdefault(self._key(d), d)
-    if confirm:
-      rows = self._measure([self.incumbent] + list(confirm.values()), "confirm")
-      ctl = rows[0]
-      observations = {}
-      for d, loads in zip(confirm.values(), rows[1:]):
-        for L in self.loads:
-          if self.reach.reaches(L, d, self.incumbent):
-            gain = loads[L] / ctl[L] - 1
-            if not math.isfinite(gain) or gain <= -1:
-              raise ValueError("confirmation ratio must be finite and positive")
-            # Aliases sharing a build in this round are correlated observations.
-            # Keep the first, never the most favorable, for that load and identity.
-            observations.setdefault((L, self.reach.identity(L, d)), (gain, d))
-      self._record(self.incumbent, ctl, 6.0)
-      for d, loads in zip(confirm.values(), rows[1:]):
-        self._record(d, loads, 6.0)
-      for (L, identity), (gain, d) in observations.items():
-        self.evidence.add(L, identity, gain, d)
+    self.confirm(list(confirm.values()))
     bound, _ = self.evidence.bind(self.min_samples, self.margin)
     return {"frontier": len(cands), "compiled": sum(1 for r in records if r.get("ok")), "screened": len(screen),
             "confirmed": len(confirm), "bound": {L: round(b["gain"] * 100, 2) for L, b in bound.items()}}
