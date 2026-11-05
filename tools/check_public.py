@@ -19,8 +19,8 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_ROOTS = {
-    ".gitignore", ".github", "LICENSE", "README.md", "pyproject.toml", "MANIFEST.in",
-    "assets", "data", "docs", "examples", "kernels", "notebooks", "tests",
+    ".gitignore", ".github", ".claude-plugin", "LICENSE", "README.md", "pyproject.toml", "MANIFEST.in",
+    "assets", "data", "docs", "examples", "kernels", "notebooks", "plugins", "tests",
     "tools", "xcalibur",
 }
 PRIVATE_PARTS = {"garage", ".archive", ".agents", ".codex", ".aws", ".secrets", ".kaggle"}

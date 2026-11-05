@@ -74,3 +74,24 @@ def test_attention_uses_distributed_compiler_helpers(monkeypatch):
     assert result[2] == "loaded:cubin"
     assert ns["ws_module"]("fixture", "ignored cached input") is result
     assert len(calls) == 1
+
+
+def test_claude_marketplace_lists_complete_plugins():
+    import json
+    import re
+    market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text())
+    assert market["name"] and market["plugins"]
+    for entry in market["plugins"]:
+        plugin = ROOT / entry["source"]
+        manifest = json.loads((plugin / ".claude-plugin" / "plugin.json").read_text())
+        assert manifest["name"] == entry["name"]
+        assert manifest.get("version") == entry.get("version")
+        skills = sorted((plugin / "skills").glob("*/SKILL.md"))
+        assert skills
+        for skill in skills:
+            text = skill.read_text()
+            front = re.match(r"---\n(.*?)\n---\n", text, re.DOTALL)
+            assert front and re.search(rf"^name: {skill.parent.name}$", front.group(1), re.MULTILINE)
+            assert "description:" in front.group(1)
+            assert len(text.splitlines()) <= 300
+    assert {".claude-plugin", "plugins"} <= audit.PUBLIC_ROOTS
