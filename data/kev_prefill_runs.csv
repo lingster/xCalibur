@@ -1,0 +1,8 @@
+run,label,change,hardware,model,mode,pairs,median_ratio,ci90_lo,ci90_hi,margin,dp_p999,dp_max,flip_rate,within1,decision
+20261105T091828Z-c0c919,K1a,A/A same-process,RTX 3090,Kev-9B bf16,same-process,16,1.0003,1.0001,1.0008,1.002,0.0,0.0,0.0,1.0,noise floor
+20261105T092531Z-2ee1bc,K1b,A/A blocks,RTX 3090,Kev-9B bf16,blocks,16,0.9992,0.9984,0.9994,1.003,0.0,0.0,0.0,1.0,noise floor
+20261105T093322Z-225cff,K2,fused vs unfused (KEV_FUSED=1 vs 0),RTX 3090,Kev-9B bf16,blocks,16,1.1398,1.1380,1.1402,1.003,0.0157,0.0162,0.0256,1.0,baseline (reference drift)
+20261105T094147Z-714278,K3,B3 last layer K/V only (KEV_STATE_KV_ONLY=1 vs 0),RTX 3090,Kev-9B bf16,blocks,16,1.0338,1.0320,1.0352,1.003,0.0,0.0,0.0,1.0,adopt
+20261105T094833Z-2a2644,K4,separate vs concat projections (KEV_FUSED_CONCAT=0 vs 1),RTX 3090,Kev-9B bf16,blocks,16,1.0048,1.0027,1.0057,1.003,0.0152,0.0152,0.0,1.0,no effect
+pending (K5),K5,B4 question rows in one pass (KEV_ROWS_ONE_PASS=1),RTX 3090,Kev-9B bf16,blocks,,,,,1.003,,,,,pending
+ADA1 (interim),ADA1,B2 fused under FP8 vs production unfused,RTX 6000 Ada,Kev-27B FP8,HTTP replay c=2,,1.12,,,,,,,,interim

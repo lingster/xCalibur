@@ -140,6 +140,15 @@ close-out revised the headroom model and closed that branch. The useful artifact
 is the whole chain—assumption, test, contradiction and revised scope—including
 the failed prediction.
 
+The [sm_86/sm_89 prefill study](studies.md#sm86-sm89) shows the inexpensive
+version of that correction. Its prior split of a state pass (GEMM 70%, attention
+19%, DeltaNet 6%) was replaced by a profile (81, 12.5 and 2.3%) before any
+kernel changed, and a roofline check put the largest GEMM at about 95% of the
+board's peak. The instrument closed the tuning branch before it consumed runs.
+Its answer gate was revised the same way: a flip limit chosen in advance would
+have rejected the reference's own fused/unfused drift, so the gate was set from
+that measured drift instead.
+
 <a id="substance-of-gates"></a>
 ## A gate must engage with the construction
 

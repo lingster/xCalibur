@@ -1,7 +1,7 @@
 # Executable research notebooks
 
 The notebooks combine a mechanism, a runnable example or recorded dataset, and
-an explicit statement of what the result establishes. All eleven run on CPU.
+an explicit statement of what the result establishes. All twelve run on CPU.
 Saved outputs let GitHub readers inspect the figures without installing anything.
 
 ## Run from a fresh checkout
@@ -17,7 +17,7 @@ python tools/check_public.py
 ```
 
 `build.py` is the source of truth for notebooks 01–07;
-[`research.py`](research.py) supplies 08–11. Change those sources and rebuild.
+[`research.py`](research.py) supplies 08–11 and [`sm86_sm89.py`](sm86_sm89.py) supplies 12. Change those sources and rebuild.
 The builder selects the active Python interpreter, uses deterministic cell IDs,
 removes timing metadata, and writes figures into `docs/figures/`.
 
@@ -41,6 +41,7 @@ execute the notebooks after installing dependencies.
 | [09 · Structural search](09_structural_search.ipynb) | Compare search/setup costs, execute finite-alphabet contracts and inspect load-pattern/complete-program outcomes | CPU proofs + recorded H200 summaries, failures and intervals |
 | [10 · Operators and model feedback](10_operator_and_model_feedback.ipynb) | Recompute LoRA medians; replay a resource repair and its six-load outcome | Recorded SM120/H200 studies + CPU checker replay |
 | [11 · ARC transfer](11_arc_transfer.ipynb) | Check a transpose map; distinguish grid validity from task accuracy | Synthetic map + four-task repeated-condition pilot |
+| [12 · Prefill on sm_86 and sm_89](12_prefill_on_sm86_sm89.ipynb) | Read paired ratios against an A/A margin and a drift gate; split a request's time where GEMMs are already at peak | Recorded RTX 3090 run summaries and profile shares |
 
 These notebooks reproduce **analysis**, not the original hardware campaigns.
 The [documentation](../docs/README.md#reading-order) lists the shipped implementations and

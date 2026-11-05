@@ -365,8 +365,36 @@ Actual compiler allocation and occupancy remain observations to check.
 
 [`warpspeed.py`](../xcalibur/warpspeed.py) places squads, derives phase arrivals,
 allocates rings/barriers, and checks CTA/SM budgets. It returns derived quantities
-and typed violations that a refiner can act on. The shipped profile is H200;
+and typed violations that a refiner can act on. The default profile is H200;
 the Gemma 4 SM120 studies use their own hardware context.
+
+<a id="architecture-profiles"></a>
+**Architecture profiles.** `ARCHS` also holds sm_86 (RTX 3090, RTX A6000) and
+sm_89 (RTX 6000 Ada, L40S, RTX 4090) boards, taken from the per-compute-capability
+tables [[CUDA-PG](references.md#cuda-pg)]. They differ from H200 in limits and in
+available features:
+
+| | sm_86 | sm_89 | sm_90a (H200) |
+|---|---|---|---|
+| Threads / resident CTAs per SM | 1,536 / 16 | 1,536 / 24 | 2,048 / 32 |
+| Shared memory per SM / per CTA | 100 / 99 KB | 100 / 99 KB | 228 / 227 KB |
+| `wgmma`, TMA expect-tx, `setmaxnreg` | no | no | yes |
+
+A plan that needs an absent feature fails with a typed counterexample:
+`tma_arch` for a phase with transaction bytes, `wgmma_arch` for a squad marked
+`"wgmma": true`, `setmaxnreg_arch` for a register target, and `sm_ctas` for more
+resident CTAs than the SM allows; `wgmma_alignment` rejects a wgmma squad that
+does not cover whole warpgroups on Hopper. On these boards a ring is produced
+with `cp.async` and an mbarrier arrive, so its phases have owners but no
+transaction bytes. The H200 profile and its results are unchanged.
+
+Each profile also records roofline facts from datasheets and whitepapers
+[[GA102](references.md#ga102), [Ada](references.md#ada)]: dense bf16, FP8 and
+INT8 tensor throughput, DRAM bandwidth and L2, with unverified values marked in
+the source. GeForce boards run bf16 tensor math with fp32 accumulation at half
+rate (RTX 3090: 71 dense TFLOPS, not 142), which decides whether a measured
+GEMM still has headroom. The [sm_86/sm_89 study](studies.md#sm86-sm89) used
+that bound.
 
 Resource accounting does not prove deadlock freedom, memory ordering or lifetime
 correctness. Cross-CTA publication additionally requires grid-level ownership,

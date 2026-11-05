@@ -1,0 +1,33 @@
+run,workload,tokens,questions,kind,phase,item,share_pct
+9b-fused-syn4k,syn 4k,4288,6,split,request,state,88.5
+9b-fused-syn4k,syn 4k,4288,6,split,request,rows,11.5
+9b-fused-syn16k,syn 16k,16587,6,split,request,state,92.5
+9b-fused-syn16k,syn 16k,16587,6,split,request,rows,7.5
+9b-fused-syn28k,syn 28k,28864,6,split,request,state,94.5
+9b-fused-syn28k,syn 28k,28864,6,split,request,rows,5.5
+9b-fused-sec2,SEC (8 Q),29477,8,split,request,state,90.6
+9b-fused-sec2,SEC (8 Q),29477,8,split,request,rows,9.4
+9b-fused-sec2,SEC (20 Q),28956,20,split,request,state,79.6
+9b-fused-sec2,SEC (20 Q),28956,20,split,request,rows,20.4
+9b-fused-syn4k,syn 4k,4288,6,category,state_pass,gemm,90.8
+9b-fused-syn4k,syn 4k,4288,6,category,state_pass,attention,1.9
+9b-fused-syn4k,syn 4k,4288,6,category,state_pass,deltanet,2.6
+9b-fused-syn4k,syn 4k,4288,6,category,state_pass,norm-act,2.7
+9b-fused-syn4k,syn 4k,4288,6,category,state_pass,copy,1.4
+9b-fused-syn4k,syn 4k,4288,6,category,state_pass,elementwise,0.6
+9b-fused-syn16k,syn 16k,16587,6,category,state_pass,gemm,86.2
+9b-fused-syn16k,syn 16k,16587,6,category,state_pass,attention,6.9
+9b-fused-syn16k,syn 16k,16587,6,category,state_pass,deltanet,2.4
+9b-fused-syn16k,syn 16k,16587,6,category,state_pass,norm-act,2.6
+9b-fused-syn16k,syn 16k,16587,6,category,state_pass,copy,1.2
+9b-fused-syn16k,syn 16k,16587,6,category,state_pass,elementwise,0.5
+9b-fused-syn28k,syn 28k,28864,6,category,state_pass,gemm,81.0
+9b-fused-syn28k,syn 28k,28864,6,category,state_pass,attention,12.5
+9b-fused-syn28k,syn 28k,28864,6,category,state_pass,deltanet,2.3
+9b-fused-syn28k,syn 28k,28864,6,category,state_pass,norm-act,2.5
+9b-fused-syn28k,syn 28k,28864,6,category,state_pass,copy,1.2
+9b-fused-syn28k,syn 28k,28864,6,category,state_pass,elementwise,0.5
+9b-fused-syn28k,syn 28k,28864,6,category,question_rows,attention,33.6
+9b-fused-syn28k,syn 28k,28864,6,category,question_rows,copy,26.9
+9b-fused-syn28k,syn 28k,28864,6,category,question_rows,gemm,36.1
+9b-fused-syn28k,syn 28k,28864,6,category,question_rows,deltanet+norm+elementwise,3.4

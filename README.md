@@ -38,7 +38,8 @@ what each experiment teaches.
    intel gathering and curation, the OODA harness with IARs, AARs and reset and
    pivot (RAP), and the Anvil planner/refiner loop.
 4. **[Studies](docs/studies.md)** — how these ideas were exercised in Gemma 4,
-   MoE, complete LoRA operators, structural construction and ARC.
+   MoE, complete LoRA operators, structural construction, ARC, and a long-document
+   prefill on RTX 3090 and RTX 6000 Ada cards.
 
 The [documentation index](docs/README.md) provides section-level navigation.
 [Big-picture reflections](docs/reflections.md) examine what the campaigns taught
@@ -47,8 +48,10 @@ us about choosing experiments, transferring knowledge and revising assumptions.
 ## Use the code
 
 [`xcalibur/`](xcalibur/) contains reusable algebra, checking, search, graph and
-measurement tools. [`kernels/`](kernels/README.md) contains the H200 NVFP4 MoE and
-**TG4DAC's Gemma 4 31B attention and W4A16 MLP + LoRA kernels** for SM120.
+measurement tools, with resource profiles for H200, sm_86 and sm_89 boards.
+[`kernels/`](kernels/README.md) contains the H200 NVFP4 MoE,
+**TG4DAC's Gemma 4 31B attention and W4A16 MLP + LoRA kernels** for SM120, and
+block-FP8 (sm_89) and INT8 W8A8 (sm_86) GEMM kits.
 
 [Getting started](docs/getting-started.md) covers installation, runnable examples
 and API contracts. The [data](data/README.md) and
