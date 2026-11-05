@@ -1,12 +1,7 @@
-AA2.md
-README2.md
-!/xcalibur/supersonic/README2.md
 build/
 *.egg-info/
 *.so
 __pycache__/
 .pytest_cache/
 .venv/
-tests/ablations/*
 tests/ablations/
-/garage/

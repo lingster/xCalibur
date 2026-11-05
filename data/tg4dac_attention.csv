@@ -1,0 +1,14 @@
+phase,layer,M,context,vllm_ms,planner_ms,refiner_warpspeed_ms
+prefill,sliding,7131,,4.51,1.8,0.99
+prefill,sliding,15329,,9.99,3.93,2.17
+prefill,global,7131,,23.3,14.7,7.95
+prefill,global,15329,,109.3,67.1,35.6
+decode,sliding,1,4096,0.0239,0.0207,0.0172
+decode,sliding,1,131072,0.0623,0.0207,0.0172
+decode,sliding,8,131072,0.1135,0.101,0.0936
+decode,global,1,4096,0.036,0.0238,0.0241
+decode,global,1,32768,0.1926,0.1094,0.1018
+decode,global,1,131072,0.717,0.542,0.527
+decode,global,8,4096,0.1948,0.112,0.1168
+decode,global,8,32768,1.435,0.747,0.738
+decode,global,8,131072,5.662,3.337,3.162

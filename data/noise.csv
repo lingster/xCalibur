@@ -1,0 +1,10 @@
+kind,load,ratio
+aa_six_load,A/A session 1,1.00218
+aa_six_load,A/A session 2,1.0009
+identical_d1_build_screen_4x1,d1,0.98581
+identical_d1_build_screen_4x1,d1,1.00917
+identical_d1_build_screen_4x1,d1,1.0137
+identical_d16_build_confirm_12x2,d16,1.01755
+identical_d16_build_confirm_12x2,d16,1.00438
+identical_d16_build_confirm_12x2,d16,1.00509
+identical_d16_build_confirm_12x2,d16,1.00922

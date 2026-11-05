@@ -1,0 +1,19 @@
+run,load,sglang_us,ours_us,sol_us
+starting kernel,d1,77.42,25.41,11.42
+starting kernel,d16,186.30,91.42,52.52
+starting kernel,d32,205.86,123.75,70.76
+starting kernel,v1,141.42,62.58,37.32
+starting kernel,v16,461.42,174.34,101.34
+starting kernel,v32,620.16,210.28,108.94
+our design,d1,76.99,24.27,11.42
+our design,d16,188.27,91.53,52.52
+our design,d32,204.88,123.03,70.76
+our design,v1,142.16,63.08,37.32
+our design,v16,458.40,172.17,101.34
+our design,v32,613.39,206.21,108.94
++ per-size build,d1,76.58,24.39,11.42
++ per-size build,d16,185.92,89.25,52.52
++ per-size build,d32,204.56,121.39,70.76
++ per-size build,v1,149.90,67.22,37.32
++ per-size build,v16,457.07,172.52,101.34
++ per-size build,v32,622.48,208.25,108.94
