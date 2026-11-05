@@ -19,10 +19,11 @@ GROUP = 128
 
 def to_e4m3_sm89(y: torch.Tensor) -> torch.Tensor:
   """fp32 -> e4m3 as Triton lowers it on sm_89: truncate to fp16 (RZ), then round to nearest even. Differs from a
-  single rounding only when y sits just above a tie by less than an fp16 ulp."""
+  single rounding only when y sits just above a tie by less than an fp16 ulp. The sign is copied bit for bit, so
+  -0.0 (and a negative value that rounds to zero) gives code 0x80, as the hardware cast does."""
   b = y.contiguous().view(torch.int32) & 0x7FFFFFFF
   t = torch.where(b >= 0x38800000, (b & -8192).view(torch.float32), torch.trunc(y.abs() * 2.0 ** 24) / 2.0 ** 24)
-  return torch.where(y < 0, -t, t).to(FP8)
+  return torch.copysign(t, y).to(FP8)
 
 
 def quantise_activation(x: torch.Tensor, group: int = GROUP) -> tuple[torch.Tensor, torch.Tensor]:

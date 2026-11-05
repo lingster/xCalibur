@@ -6,6 +6,9 @@ with `CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1`, so inside the proces
 production venv (torch 2.14.1+cu130, triton 3.8.0, transformers 5.17.0, kernels 0.16.0) and install nothing.
 Everything writes into one results folder.
 
+Round 2 (after the ce74c95 run): the Ada steps that followed are in the README (rounds 2 and 3). search.py now times in steady
+state by default (`--timing cold` gives the old single-cold-replay protocol, which inflated gains on this card).
+
 Order: **(a) first.** It alone answers "is the FP8 GEMM far from peak, and why". Then (b) search, (c) parity, (d) a
 fresh confirm, (e) efficiency again with the tuned tables. If time is short, stop after any step and send what you
 have.

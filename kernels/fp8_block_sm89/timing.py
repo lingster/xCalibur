@@ -1,13 +1,16 @@
 """Two clocks for one call, so host overhead and device time are never confused.
 
   eager_ms   CUDA events around a plain Python call, warm L2, median of enough calls to fill ~200 ms: the method of
-             the Ada probe (sec_bench fp8_gemm_probe.py ``timed``). It includes host dispatch: while Python prepares
+             the first Ada probe. It includes host dispatch: while Python prepares
              the launch the GPU idles between the events, so a launch-bound call reads as its host cost.
   graph_ms   the call captured once in a CUDA graph and replayed back-to-back between events: DEVICE time per call,
              no Python, no launch overhead (warm L2, comparable to eager_ms).
+  rot_ms     graph_ms over one call per weight copy, divided by the copies: device time per call when every call reads
+             its weight from DRAM, as in production where each layer has its own weights. Warm-L2 graph_ms overstates
+             small-M gains (the weight of a skinny GEMM fits in L2 and stays there).
 
 eager_ms >> graph_ms means the call is host-bound: fix launches (concat groups, CUDA graphs), not tiles.
-For decisions (search, A/A) use ``xcalibur.Bench.paired``: ABBA pairs, cold L2, null replay subtracted.
+For decisions (search, A/A) use ``safebench.SafeBench.paired``: ABBA pairs, validated captures, steady state by default.
 """
 from __future__ import annotations
 
@@ -56,6 +59,14 @@ def graph_ms(fn, min_ms: float = 200.0, rounds: int = 5) -> float:
     e.record(); torch.cuda.synchronize()                                       # noqa: E702
     out.append(s.elapsed_time(e) / n)
   return sorted(out)[len(out) // 2]
+
+
+def rot_ms(call, weights: list, min_ms: float = 200.0, rounds: int = 5) -> float:
+  """Device time per call(w, ws) when the calls rotate through ``weights`` ([(w, ws)], enough copies to overflow L2)."""
+  def all_copies():
+    for w, ws in weights:
+      call(w, ws)
+  return graph_ms(all_copies, min_ms, rounds) / len(weights)
 
 
 def tflops(M: int, N: int, K: int, ms: float | None) -> float | None:

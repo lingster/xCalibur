@@ -1,7 +1,7 @@
 """Per-shape search for the block-FP8 GEMM: xCalibur's measured game, one build per (N, K, M bucket).
 
 For each (N, K): loads are M buckets; the incumbent is the stock hub kernel; every timing is a paired ABBA run
-against stock in the same session (``xcalibur.Bench.paired``: CUDA graphs, cold L2, null replay subtracted).
+against stock in the same session (``safebench.SafeBench``: CUDA graphs, steady-state ABBA blocks by default).
 
   1. A/A: stock against itself per bucket; the binding margin is max(--margin, |A/A - 1| + CI half-width).
   2. Seed screen (stock, anchors, random legal designs), confirm the seed leaders next to stock.
@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import random
-import statistics
 import sys
 import time
 
@@ -31,86 +30,28 @@ import torch
 
 import xcalibur as xc
 
-import aot
 import kernel
 import parity
-import reference
+import safebench
 import shapes
 import space
 import stock
 import public
+from combine import kernel_shas
 from plan import aa_margin, fresh_confirm, make_game, play, seed_designs
+from session import Session, log
+from ship import parity_gate
 from table import TuneTable
 
 DRY = dict(shapes="1024x5120", buckets="m64,m4k", rounds=1, seed_n=20, screen_pairs=4, confirm_pairs=8, fresh_runs=2,
            compile_n=12, screen_n=6, per_load=4, reference="twin")
 
 
-def log(msg: str) -> None:
-  print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
-
-
-class Session:
-  """The hardware half of one shape's game: problems per bucket, the reference, and the measure/compile callbacks."""
-
-  def __init__(self, N: int, K: int, buckets: list[shapes.Bucket], ref: stock.Reference, a, bench: xc.Bench):
-    self.N, self.K, self.ref, self.a, self.bench = N, K, ref, a, bench
-    self.loads = {b.name: b.M for b in buckets}
-    _, self.w, self.ws = reference.random_problem(1, N, K, "cuda", seed=1)
-    self.x = {b.name: reference.random_problem(b.M, 128, K, "cuda", seed=b.M)[0] for b in buckets}
-    self.q = {L: kernel.act_quant(x, dot=a.dot) for L, x in self.x.items()} if a.quant_cost == "shared" else {}
-    self.raw: list[dict] = []
-
-  def _ref_fn(self, L):
-    x = self.x[L]
-    return lambda: self.ref.fn(x, self.w, self.ws)
-
-  def _call(self, L, cfg: space.TileConfig):
-    x, w, ws, dot = self.x[L], self.w, self.ws, self.a.dot
-    if cfg.quant == "once" and L in self.q:                         # quant shared with the input group: not charged
-      q, s = self.q[L]
-      return lambda: kernel.block_fp8_matmul(q, w, ws, cfg, a_scale=s, dot=dot)
-    return lambda: kernel.block_fp8_matmul(x, w, ws, cfg, dot=dot)   # "once" pays its own quant kernel here
-
-  def measure(self, designs: list[dict], grade: str) -> list[dict]:
-    pairs = self.a.screen_pairs if grade == "screen" else self.a.confirm_pairs
-    rows = []
-    for d in designs:
-      row = {}
-      for L, M in self.loads.items():
-        if not space.applicable(d, M, self.K):
-          continue
-        ref_fn = self._ref_fn(L)
-        try:
-          fn = ref_fn if space.is_stock(d) else self._call(L, space.to_config(d, M))
-          r = self.bench.paired(fn, ref_fn, pairs)
-        except Exception as e:                                      # noqa: BLE001  (e.g. out of resources on sm_86)
-          log(f"  measure failed {L} {d}: {type(e).__name__}: {str(e)[:120]}")
-          continue
-        row[L] = r["ratio"]
-        self.raw.append({"load": L, "grade": grade, "design": d, "ratio": r["ratio"], "ci": r["ci"],
-                         "candidate_us": r["candidate_us"], "reference_us": r["reference_us"]})
-      rows.append(row)
-    return rows
-
-  def compile(self, designs: list[dict]) -> list[dict]:
-    """Exact sm_89 compile of the fp8 build: legality (Triton, ptxas, <= 99 KB smem) and resource features."""
-    return [aot.compile_sm89(space.to_config(d, 128)) for d in designs]
-
-  def times(self, d: dict, L: str) -> dict:
-    rs = [r for r in self.raw if r["load"] == L and r["design"] == d and r["grade"] == "confirm"]
-    if not rs:
-      return {}
-    return {"tuned_us": statistics.median(r["candidate_us"] for r in rs),
-            "stock_us": statistics.median(r["reference_us"] for r in rs),
-            "ratio": statistics.median(r["ratio"] for r in rs), "confirm_runs": len(rs)}
-
-
 def run_shape(N: int, K: int, buckets: list[shapes.Bucket], ref: stock.Reference, a, bench: xc.Bench,
               tab: TuneTable) -> None:
   log(f"shape N={N} K={K} ({', '.join(shapes.gemm_names(N, K)) or 'custom'}) buckets {[b.name for b in buckets]}")
-  ses = Session(N, K, buckets, ref, a, bench)
-  aa = {L: bench.aa(ses._ref_fn(L), pairs=a.confirm_pairs) for L in ses.loads}
+  ses = Session(N, K, buckets, ref, a, bench, a.drift_tol)
+  aa = {L: ses.aa(L, a.confirm_pairs) for L in ses.loads}
   margin = max(aa_margin(r, a.margin) for r in aa.values())
   for L, r in aa.items():
     log(f"  A/A {L}: ratio {r['ratio']:.4f} CI {r['ci'][0]:.4f}-{r['ci'][1]:.4f}  stock {r['reference_us']:.1f} us")
@@ -122,7 +63,11 @@ def run_shape(N: int, K: int, buckets: list[shapes.Bucket], ref: stock.Reference
   seeds = [d for d in seed_designs(a.seed_n, random.Random(a.seed), extra=pub) if keep is None or keep(d)]
   bound = play(game, seeds, a.rounds, log=lambda m: log("  " + m))
   log(f"  search bound {sorted(bound)}; fresh confirm x{a.fresh_runs} next to stock (winner's curse)")
+  ses.restrict(bound)
   fresh = fresh_confirm(ses.measure, bound, a.fresh_runs, margin, a.min_samples) if bound else {}
+  ses.only = None
+  if ses.illegal or ses.dropped:
+    log(f"  {len(ses.illegal)} designs illegal on this card, {ses.dropped} samples dropped (stock drifted from its A/A)")
   for L in bound:
     log(f"  {L}: search +{bound[L]['gain'] * 100:.2f}% -> fresh " +
         (f"+{fresh[L]['gain'] * 100:.2f}% ({fresh[L]['samples']} runs)" if L in fresh else "did not bind: dropped"))
@@ -135,8 +80,8 @@ def run_shape(N: int, K: int, buckets: list[shapes.Bucket], ref: stock.Reference
       cfg = space.to_config(hit["design"], b.M)
       par = parity.check(b.M, N, K, cfg, ref, a.dot)
       extra.update(ses.times(hit["design"], b.name), parity={k: par[k] for k in ("ok", "bitwise", "max_abs", "max_ulp")})
-      if not par["ok"]:
-        log(f"  {b.name}: bound build FAILED parity ({par['max_ulp']:.1f} ulp), keeping stock")
+      if not parity_gate(par, a.bitwise_only):
+        log(f"  {b.name}: bound build FAILED parity (bitwise={par['bitwise']}, {par['max_ulp']:.1f} ulp), keeping stock")
         hit, cfg = None, None
     tab.add(N, K, b, cfg if hit else None, gain=hit["gain"] if hit else 0.0, samples=hit["samples"] if hit else 0,
             search_gain=hit["search_gain"] if hit else None, **extra)
@@ -144,24 +89,34 @@ def run_shape(N: int, K: int, buckets: list[shapes.Bucket], ref: stock.Reference
                            else "stock kept"))
 
 
-def confirm_table(path: str, ref: stock.Reference, a, bench: xc.Bench, tab: TuneTable) -> None:
+def confirm_table(path: str, ref: stock.Reference, a, bench, tab: TuneTable) -> None:
   """Re-time every tuned entry of a finished table in this (fresh) process, A/A first, and keep only entries that
-  bind again on this session's evidence alone; the others revert to stock (config null)."""
+  bind again on this session's evidence alone; the others revert to stock (config null). Every entry starts as
+  pending (config null, the build kept under ``candidate``) and the table is saved after each shape, so a crash can
+  never leave an unconfirmed build in the output (ce74c95 left gate/up and down_proj that way)."""
   old = TuneTable.load(path)
-  tab.entries = [dict(e) for e in old.entries]
+  searched = kernel_shas(old.meta)
+  if not searched or not all(kernel.fp8_path_compatible(s) for s in searched):
+    raise ValueError(f"{path}: searched on kernel {searched}, not this fp8 path ({kernel.KERNEL_SHA}); search again")
+  tab.meta["searched_kernel_sha"] = searched                       # meta kernel_sha is this (confirming) process's
+  tab.entries = [dict(e, config=None, candidate=e["config"], confirm={"status": "pending"}) if e["config"] else dict(e)
+                 for e in old.entries]
+  tab.save(a.out)
   for N, K in dict.fromkeys((e["N"], e["K"]) for e in old.entries if e["config"]):
-    rows = [e for e in tab.entries if (e["N"], e["K"]) == (N, K) and e["config"]]
-    ses = Session(N, K, [shapes.bucket_named(e["bucket"]) for e in rows], ref, a, bench)
-    margin = max(aa_margin(bench.aa(ses._ref_fn(L), pairs=a.confirm_pairs), a.margin) for L in ses.loads)
-    fresh = fresh_confirm(ses.measure, {e["bucket"]: {"design": e["config"]} for e in rows}, a.fresh_runs, margin,
-                          a.min_samples)
+    rows = [e for e in tab.entries if (e["N"], e["K"]) == (N, K) and e.get("candidate")]
+    ses = Session(N, K, [shapes.bucket_named(e["bucket"]) for e in rows], ref, a, bench, a.drift_tol)
+    margin = max(aa_margin(ses.aa(L, a.confirm_pairs), a.margin) for L in ses.loads)
+    bound = {e["bucket"]: {"design": e["candidate"]} for e in rows}
+    ses.restrict(bound)
+    fresh = fresh_confirm(ses.measure, bound, a.fresh_runs, margin, a.min_samples)
     for e in rows:
       f = fresh.get(e["bucket"])
-      e["confirm"] = {"gain": f["gain"] if f else None, "samples": f["samples"] if f else 0, "margin": margin}
+      e["confirm"] = {"gain": f["gain"] if f else None, "samples": f["samples"] if f else 0, "margin": margin,
+                      "status": "bound" if f else "reverted", **ses.times(e["candidate"], e["bucket"])}
       log(f"N={N} K={K} {e['bucket']}: table +{e['gain'] * 100:.2f}% -> fresh " +
           (f"+{f['gain'] * 100:.2f}% ({f['samples']} runs): kept" if f else "did not bind: reverted to stock"))
-      if not f:
-        e["config"] = None
+      if f:
+        e["config"] = e["candidate"]
     tab.save(a.out)
 
 
@@ -191,6 +146,11 @@ def parse(argv=None):
   ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--dry-run", action="store_true", help="small budgets, twin reference: prove the plumbing on sm_86")
   ap.add_argument("--confirm-table", help="instead of searching: fresh confirm of every tuned entry in this table")
+  ap.add_argument("--timing", default="steady", choices=("steady", "cold"),
+                  help="steady: blocks of back-to-back replays at the power cap, weights rotated past L2 (default); "
+                       "cold: xcalibur.Bench's one cold replay per sample (inflated gains on the 300 W Ada, ce74c95)")
+  ap.add_argument("--drift-tol", type=float, default=0.10,
+                  help="drop a paired sample whose stock time is this far from the session's A/A stock time")
   ap.add_argument("--out", default="tuned.json")
   a = ap.parse_args(argv)
   if a.dry_run:
@@ -210,15 +170,20 @@ def main(argv=None) -> int:
                         "reference": {"name": ref.name, **ref.provenance}, "args": vars(a),
                         "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "dry_run": a.dry_run})
   log(f"{tab.meta['gpu']} {tab.meta['cc']} dot={a.dot} reference={ref.name} kernel={kernel.KERNEL_SHA}")
-  bench = xc.Bench()
-  if a.confirm_table:
-    confirm_table(a.confirm_table, ref, a, bench, tab)
-    log(f"wrote {a.out}: {sum(1 for e in tab.entries if e['config'])} tuned entries survived the fresh confirm")
-    return 0
-  buckets = [shapes.bucket_named(b) for b in a.buckets.split(",")]
-  for N, K in shapes.parse_shapes(a.shapes):
-    run_shape(N, K, buckets, ref, a, bench, tab)
-    tab.save(a.out)                                                 # after every shape: a long run keeps its work
+  bench = safebench.SafeBench(mode=a.timing)
+  try:
+    if a.confirm_table:
+      confirm_table(a.confirm_table, ref, a, bench, tab)
+      log(f"wrote {a.out}: {sum(1 for e in tab.entries if e['config'])} tuned entries survived the fresh confirm")
+      return 0
+    buckets = [shapes.bucket_named(b) for b in a.buckets.split(",")]
+    for N, K in shapes.parse_shapes(a.shapes):
+      run_shape(N, K, buckets, ref, a, bench, tab)
+      tab.save(a.out)                                               # after every shape: a long run keeps its work
+  except safebench.CudaPoisoned as e:
+    tab.save(a.out)
+    log(f"STOPPED: {e}. Saved {a.out} (finished shapes only; rerun the rest in a new process)")
+    return 2
   log(f"wrote {a.out}: {sum(1 for e in tab.entries if e['config'])}/{len(tab.entries)} buckets tuned")
   return 0
 

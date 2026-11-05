@@ -1,0 +1,406 @@
+{
+ "meta": {
+  "kind": "shippable",
+  "bitwise_only": true,
+  "kernel_sha": [
+   "aa029a2e417a5070"
+  ],
+  "sources": [
+   "confirmed_bitwise_r2.json"
+  ],
+  "parity": [
+   "parity_r2.json"
+  ],
+  "eff": [
+   "eff_r2.json"
+  ],
+  "utc": "2026-11-05T17:47:34Z",
+  "rule": "confirmed AND bitwise vs hub AND faster in steady state"
+ },
+ "entries": [
+  {
+   "N": 1024,
+   "K": 5120,
+   "bucket": "m512",
+   "lo": 257,
+   "hi": 1024,
+   "M": 512,
+   "config": {
+    "quant": "once",
+    "BLOCK_M": 64,
+    "BLOCK_N": 64,
+    "BLOCK_K": 128,
+    "GROUP_M": 1,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "gain": 2.161139543937335,
+   "samples": 3,
+   "search_gain": 2.232143005051756,
+   "aa": {
+    "ratio": 1.0,
+    "ci": [
+     1.0,
+     1.0
+    ]
+   },
+   "margin": 0.008733690739853639,
+   "stock_choice": {
+    "num_warps": 8,
+    "num_stages": 2
+   },
+   "tuned_us": 28.67199946194887,
+   "stock_us": 92.16000232845545,
+   "ratio": 3.178571557339176,
+   "confirm_runs": 5,
+   "parity": {
+    "ok": true,
+    "bitwise": true,
+    "max_abs": 0.0,
+    "max_ulp": 0.0
+   },
+   "candidate": {
+    "quant": "once",
+    "BLOCK_M": 64,
+    "BLOCK_N": 64,
+    "BLOCK_K": 128,
+    "GROUP_M": 1,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "confirm": {
+    "gain": 2.4479954944265505,
+    "samples": 3,
+    "margin": 0.00654128544799204,
+    "status": "bound",
+    "tuned_us": 26.580000296235085,
+    "stock_us": 91.7460024356842,
+    "ratio": 3.4527316778562076,
+    "confirm_runs": 3
+   },
+   "steady_ratio": 3.1446501543050793
+  },
+  {
+   "N": 1024,
+   "K": 5120,
+   "bucket": "m64",
+   "lo": 1,
+   "hi": 64,
+   "M": 64,
+   "config": {
+    "quant": "once",
+    "BLOCK_M": 32,
+    "BLOCK_N": 64,
+    "BLOCK_K": 128,
+    "GROUP_M": 1,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 5
+   },
+   "gain": 1.39583343399356,
+   "samples": 3,
+   "search_gain": 1.4072266747990656,
+   "aa": {
+    "ratio": 1.0,
+    "ci": [
+     1.0,
+     1.0
+    ]
+   },
+   "margin": 0.008733690739853639,
+   "stock_choice": {
+    "num_warps": 8,
+    "num_stages": 3
+   },
+   "tuned_us": 16.383999027311802,
+   "stock_us": 39.93599954992533,
+   "ratio": 2.3769532323585727,
+   "confirm_runs": 5,
+   "parity": {
+    "ok": true,
+    "bitwise": true,
+    "max_abs": 0.0,
+    "max_ulp": 0.0
+   },
+   "candidate": {
+    "quant": "once",
+    "BLOCK_M": 32,
+    "BLOCK_N": 64,
+    "BLOCK_K": 128,
+    "GROUP_M": 1,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 5
+   },
+   "confirm": {
+    "gain": 1.4660403473870733,
+    "samples": 3,
+    "margin": 0.00654128544799204,
+    "status": "bound",
+    "tuned_us": 16.402526905662135,
+    "stock_us": 40.45136978751734,
+    "ratio": 2.4660403388397216,
+    "confirm_runs": 3
+   },
+   "steady_ratio": 2.4943819062166046
+  },
+  {
+   "N": 17408,
+   "K": 5120,
+   "bucket": "m28k",
+   "lo": 8193,
+   "hi": 2147483648,
+   "M": 28672,
+   "config": {
+    "quant": "once",
+    "BLOCK_M": 64,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 64,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "gain": 1.0252914111355924,
+   "samples": 3,
+   "search_gain": 1.034837453516229,
+   "aa": {
+    "ratio": 1.0000604288187418,
+    "ci": [
+     0.9992330317358935,
+     1.0044762232942832
+    ]
+   },
+   "margin": 0.00895244658856642,
+   "stock_choice": {
+    "num_warps": 16,
+    "num_stages": 2
+   },
+   "tuned_us": 21387.77615968138,
+   "stock_us": 44670.975469984114,
+   "ratio": 2.0255243466002,
+   "confirm_runs": 5,
+   "parity": {
+    "ok": true,
+    "bitwise": true,
+    "max_abs": 0.0,
+    "max_ulp": 0.0
+   },
+   "candidate": {
+    "quant": "once",
+    "BLOCK_M": 64,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 64,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "confirm": {
+    "gain": 0.26684813145677205,
+    "samples": 3,
+    "margin": 0.007731575904770693,
+    "status": "bound",
+    "tuned_us": 27900.415420532227,
+    "stock_us": 35071.48742675781,
+    "ratio": 1.266366981270693,
+    "confirm_runs": 3
+   },
+   "steady_ratio": 1.0787425293739825
+  },
+  {
+   "N": 17408,
+   "K": 5120,
+   "bucket": "m64",
+   "lo": 1,
+   "hi": 64,
+   "M": 64,
+   "config": {
+    "quant": "once",
+    "BLOCK_M": 32,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 16,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "gain": 0.019047625482139452,
+   "samples": 3,
+   "search_gain": 0.01900270182210173,
+   "aa": {
+    "ratio": 1.0,
+    "ci": [
+     1.0,
+     1.0
+    ]
+   },
+   "margin": 0.00895244658856642,
+   "stock_choice": {
+    "num_warps": 16,
+    "num_stages": 3
+   },
+   "tuned_us": 107.52000007778406,
+   "stock_us": 108.54400042444468,
+   "ratio": 1.0190476254821395,
+   "confirm_runs": 5,
+   "parity": {
+    "ok": true,
+    "bitwise": true,
+    "max_abs": 0.0,
+    "max_ulp": 0.0
+   },
+   "candidate": {
+    "quant": "once",
+    "BLOCK_M": 32,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 16,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "confirm": {
+    "gain": 0.009117086373473304,
+    "samples": 3,
+    "margin": 0.007731575904770693,
+    "status": "bound",
+    "tuned_us": 115.78936682807074,
+    "stock_us": 115.77799479166667,
+    "ratio": 1.008815484182815,
+    "confirm_runs": 3
+   },
+   "steady_ratio": 1.1920837479032516
+  },
+  {
+   "N": 5120,
+   "K": 17408,
+   "bucket": "m28k",
+   "lo": 8193,
+   "hi": 2147483648,
+   "M": 28672,
+   "config": {
+    "quant": "once",
+    "BLOCK_M": 64,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 8,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "gain": 0.9392896555246075,
+   "samples": 3,
+   "search_gain": 0.9288886746851348,
+   "aa": {
+    "ratio": 1.0033593890931924,
+    "ci": [
+     0.9978872351871113,
+     1.0094605007912436
+    ]
+   },
+   "margin": 0.018921001582487218,
+   "stock_choice": {
+    "num_warps": 16,
+    "num_stages": 2
+   },
+   "tuned_us": 20268.03281251341,
+   "stock_us": 41303.551458753645,
+   "ratio": 1.9376425806995954,
+   "confirm_runs": 5,
+   "parity": {
+    "ok": true,
+    "bitwise": true,
+    "max_abs": 0.0,
+    "max_ulp": 0.0
+   },
+   "candidate": {
+    "quant": "once",
+    "BLOCK_M": 64,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 8,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "confirm": {
+    "gain": 0.34061845297380744,
+    "samples": 3,
+    "margin": 0.01328702774985957,
+    "status": "bound",
+    "tuned_us": 27256.319999694824,
+    "stock_us": 36268.5432434082,
+    "ratio": 1.33980857262923,
+    "confirm_runs": 3
+   },
+   "steady_ratio": 1.0334534041411567
+  },
+  {
+   "N": 5120,
+   "K": 17408,
+   "bucket": "m64",
+   "lo": 1,
+   "hi": 64,
+   "M": 64,
+   "config": {
+    "quant": "once",
+    "BLOCK_M": 32,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 32,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "gain": 0.2262240960401997,
+   "samples": 3,
+   "search_gain": 0.2723577294986601,
+   "aa": {
+    "ratio": 1.0,
+    "ci": [
+     1.0,
+     1.0
+    ]
+   },
+   "margin": 0.018921001582487218,
+   "stock_choice": {
+    "num_warps": 16,
+    "num_stages": 3
+   },
+   "tuned_us": 122.88000527769327,
+   "stock_us": 151.55200008302927,
+   "ratio": 1.2333332810373903,
+   "confirm_runs": 5,
+   "parity": {
+    "ok": true,
+    "bitwise": true,
+    "max_abs": 0.0,
+    "max_ulp": 0.0
+   },
+   "candidate": {
+    "quant": "once",
+    "BLOCK_M": 32,
+    "BLOCK_N": 128,
+    "BLOCK_K": 128,
+    "GROUP_M": 32,
+    "SPLIT_K": 1,
+    "num_warps": 4,
+    "num_stages": 3
+   },
+   "confirm": {
+    "gain": 0.29180344381673623,
+    "samples": 3,
+    "margin": 0.01328702774985957,
+    "status": "bound",
+    "tuned_us": 122.73509547395527,
+    "stock_us": 158.56404688166475,
+    "ratio": 1.2914638812271637,
+    "confirm_runs": 3
+   },
+   "steady_ratio": 1.7289260567972276
+  }
+ ]
+}

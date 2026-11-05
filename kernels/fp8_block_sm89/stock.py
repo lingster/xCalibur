@@ -22,6 +22,25 @@ import space
 
 HUB_REPO = "kernels-community/finegrained-fp8"
 HUB_REVISION = "8c178950e8710e26a2210e4e909cd02dc16c8715"        # production's revision (kernel repo type)
+# sha256 (base64, as the hub's metadata.json lists them) of build/torch-cuda/{matmul,utils}.py at HUB_REVISION. The v4
+# branch head that transformers loads on Ada (03ae3193..., kernel commit db1270d, seen 2026-11-05) has byte-identical
+# matmul.py and utils.py: only the packaging (builder version, _ops.py, batched/grouped) differs.
+HUB_SOURCE_DIGESTS = {"matmul.py": "D2aLXZ4OfbBnXqRRgFK5Mggw9k8kaPLsvK59CHYzaAc=",
+                      "utils.py": "LLh/mKs4XkHJX98eG+x3eiXI4LsAOjV6csB6U8K3tdA="}
+
+
+def hub_source_matches(module_file: str | None) -> bool | None:
+  """Whether the loaded hub kernel's matmul.py and utils.py are the sources hub_ref.py copies (None: no file)."""
+  import base64                                                                # noqa: PLC0415
+  import hashlib                                                               # noqa: PLC0415
+  from pathlib import Path                                                     # noqa: PLC0415
+  if not module_file or not Path(module_file).exists():
+    return None
+  d = Path(module_file).parent
+
+  def digest(f: str) -> str:
+    return base64.b64encode(hashlib.sha256((d / f).read_bytes()).digest()).decode()
+  return all((d / f).exists() and digest(f) == h for f, h in HUB_SOURCE_DIGESTS.items())
 
 
 @dataclass
@@ -51,7 +70,10 @@ def load_hub(revision: str | None = None) -> Reference:
     return None
 
   prov = {"loader": "kernels.get_kernel" if revision else "transformers", "revision": revision,
-          "module_file": getattr(mod, "__file__", None)}
+          "module_file": getattr(mod, "__file__", None),
+          "source_matches_hub_ref": hub_source_matches(getattr(mod, "__file__", None))}
+  if prov["source_matches_hub_ref"] is False:
+    print(f"[stock] WARNING: the loaded hub kernel's source differs from {HUB_REVISION[:8]} (hub_ref.py)", file=sys.stderr)
   return Reference("hub", lambda x, w, ws: matmul(x, w, ws, [128, 128], x.dtype), prov, choice)
 
 

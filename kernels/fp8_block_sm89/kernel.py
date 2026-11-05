@@ -32,7 +32,9 @@ DOTS = {"fp8": 0, "bf16": 1, "fp32": 2}
 @triton.jit
 def _round_e4m3(y):
   """fp32 -> fp32 on the e4m3 grid exactly as sm_89 casts it (sass.py): truncate to fp16 (F2FP.F16.F32...RZ), then
-  round to nearest even with saturation at 448 (F2FP.SATFINITE.E4M3.F16)."""
+  round to nearest even with saturation at 448 (F2FP.SATFINITE.E4M3.F16). The sign bit is carried through, so -0.0
+  stays -0.0 (code 0x80), as the hardware cast keeps it."""
+  sign = y.to(tl.int32, bitcast=True) & -2147483648                                     # 0x80000000
   m0 = y.to(tl.int32, bitcast=True) & 0x7FFFFFFF
   t16 = tl.where(m0 >= 0x38800000, (m0 & -8192).to(tl.float32, bitcast=True),         # fp16 normals: 10 bits
                  (tl.minimum(tl.abs(y), 1.0) * 16777216.0).to(tl.int32).to(tl.float32) / 16777216.0)  # 2^-24
@@ -42,7 +44,7 @@ def _round_e4m3(y):
   v = tl.abs(y) * 512.0                                                                 # subnormals: ulp 2^-9
   sub = ((v + 8388608.0) - 8388608.0) / 512.0
   r = tl.minimum(tl.where(mag >= 0x3C800000, nrm, sub), 448.0)                         # 0x3C800000 = 2^-6
-  return tl.where(y < 0, -r, r)
+  return (r.to(tl.int32, bitcast=True) | sign).to(tl.float32, bitcast=True)
 
 
 @triton.jit
@@ -241,3 +243,14 @@ def source_sha() -> str:
 
 
 KERNEL_SHA = source_sha()
+
+# Earlier sources of this file whose fp8 path (DOT == 0: the GEMM and act_quant as compiled for sm_89) is the same
+# machine code as this one, so tables measured on them stay valid (tests/test_fp8_block_aot.py compares the SASS
+# against git history). b3b9c062de1d4ffb: ce74c95, the Ada run of 2026-11-05; since then only the stand-in rounding
+# changed (signed zero).
+FP8_EQUIVALENT_SHAS = frozenset({"b3b9c062de1d4ffb"})
+
+
+def fp8_path_compatible(sha: str) -> bool:
+  """Whether a table measured on kernel source ``sha`` is valid for this kernel's fp8 path."""
+  return sha == KERNEL_SHA or sha in FP8_EQUIVALENT_SHAS

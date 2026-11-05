@@ -74,6 +74,19 @@ def test_e4m3_rounding_edges_match_torch():
   assert torch.equal(q.cpu().float(), x.to(torch.float8_e4m3fn).float())   # no value here sits just above a tie
 
 
+def test_negative_zero_keeps_its_sign_bit_like_the_sm89_cast():
+  """Ada failure 1 (tests_fp8_gpu.txt, ce74c95): the hardware cast F2FP.SATFINITE.E4M3 keeps the sign of zero, so
+  -0.0 -> code 0x80, as torch's cast does; the reference and the stand-in returned +0 (0x00). Harmless for the GEMM
+  (a signed-zero product adds nothing to an accumulator that starts at +0), but the codes must match bit for bit."""
+  x = torch.zeros(1, 128)
+  x[0, :3] = torch.tensor([448.0, -0.0, -(2.0 ** -12)])           # -2^-12 rounds to -0 in e4m3 (below half of 2^-9)
+  torch_codes = x.to(torch.float8_e4m3fn).view(torch.uint8)[0, :3].tolist()
+  assert torch_codes == [126, 128, 128]
+  assert reference.to_e4m3_sm89(x).view(torch.uint8)[0, :3].tolist() == torch_codes
+  q, _ = kernel.act_quant(x.to(DEVICE))
+  assert q.cpu().view(torch.uint8)[0, :3].tolist() == torch_codes
+
+
 def test_quant_follows_ada_double_rounding():
   """On sm_89 Triton lowers fp32 -> e4m3 as F2FP.F16.F32.PACK_AB.RZ then F2FP.SATFINITE.E4M3.F16 (sass.py): truncate
   to fp16, then round to nearest even. 8.5 + 2^-12 truncates to the tie 8.5 and rounds to 8 (one rounding gives 9)."""
@@ -181,10 +194,16 @@ def test_parity_passes_retilings_and_split_k_and_flags_a_real_change():
   same = parity.compare(kernel.block_fp8_matmul(x, w, ws, TileConfig("once", 16, 64, 128, 1, 1, 2, 2)), stock)
   assert same["bitwise"] and same["ok"] and same["max_abs"] == 0.0
   order = parity.compare(kernel.block_fp8_matmul(x, w, ws, TileConfig("once", 32, 64, 32, 4, 4, 2, 2)), stock)
-  assert order["ok"] and order["max_ulp"] <= 1                       # summation order: at most one bf16 ulp
   wrong = parity.compare(kernel.block_fp8_matmul(x, w, ws * 1.01, TileConfig("fused", 64, 128, 128, 8, 1, 4, 3)),
                          stock)
-  assert not wrong["ok"]
+  assert not wrong["ok"] and not wrong["bitwise"]
+  if kernel.default_dot(DEVICE) == "fp8":
+    # Ada failure 2 (ce74c95): sm_89's QMMA does not accumulate in IEEE fp32, so a build that only changes the
+    # summation order (K tile 32, split-K 4) is NOT within one bf16 ulp of stock on hardware (the Ada search saw
+    # 64 ulp for split-K 2). It is still far from a real change of the math; only the bitwise class may ship.
+    assert not order["bitwise"] and order["max_abs"] < 0.5 * wrong["max_abs"]
+  else:                                                              # IEEE fp32 accumulators (interpreter, bf16 mma)
+    assert order["ok"] and order["max_ulp"] <= 1                     # summation order: at most one bf16 ulp
 
 
 @pytest.mark.parametrize("bad", [

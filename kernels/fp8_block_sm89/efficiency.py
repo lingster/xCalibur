@@ -31,6 +31,7 @@ import xcalibur as xc
 import concat
 import kernel
 import reference
+import session
 import shapes
 import stock
 import timing
@@ -43,17 +44,30 @@ def both(fn, min_ms: float) -> dict:
   return {"eager_ms": timing.eager_ms(fn, min_ms), "graph_ms": timing.graph_ms(fn, min_ms)}
 
 
+def rotated(call, weights: list, min_ms: float) -> dict:
+  """both() on the first copy, plus rot_ms over all of them (cold weights, as production reads them)."""
+  w, ws = weights[0]
+  return both(lambda: call(w, ws), min_ms) | {"rot_ms": timing.rot_ms(call, weights, min_ms), "copies": len(weights)}
+
+
+def weight_copies(M: int, N: int, K: int, w, ws) -> list:
+  """[(w, ws)] copies covering 2 x L2 (session.weight_copies); the first is the original."""
+  return [(w, ws)] + [(w.clone(), ws.clone()) for _ in range(session.weight_copies(M, N, K, steady=True) - 1)]
+
+
 def shape_row(M: int, N: int, K: int, ref: stock.Reference, a, tab: TuneTable | None, fp8: bool) -> dict:
   x, w, ws = reference.random_problem(M, N, K, "cuda", seed=M)
   r: dict = {"M": M, "N": N, "K": K, "gemms": shapes.gemm_names(N, K)}
-  r["stock"] = both(lambda: ref.fn(x, w, ws), a.min_ms)
+  copies = weight_copies(M, N, K, w, ws)
+  r["stock"] = rotated(lambda w_, s_: ref.fn(x, w_, s_), copies, a.min_ms)
   r["stock_choice"] = ref.choice(N, K, M)
   twin = stock.Twin(a.dot)
   r["twin"] = both(lambda: twin(x, w, ws), a.min_ms) | {"choice": twin.choice(N, K, M)}
   r["quant"] = both(lambda: kernel.act_quant(x, dot=a.dot), a.min_ms)
   cfg = tab.config_for(N, K, M) if tab else None
   if cfg:
-    r["tuned"] = both(lambda: kernel.block_fp8_matmul(x, w, ws, cfg, dot=a.dot), a.min_ms) | {"config": cfg.as_dict()}
+    r["tuned"] = rotated(lambda w_, s_: kernel.block_fp8_matmul(x, w_, s_, cfg, dot=a.dot), copies, a.min_ms) | {
+      "config": cfg.as_dict()}
   if fp8:
     xa, one = x.to(torch.float8_e4m3fn), torch.ones((), device="cuda")
     r["cublas"] = both(lambda: torch._scaled_mm(xa, w.t(), scale_a=one, scale_b=one, out_dtype=torch.bfloat16), a.min_ms)

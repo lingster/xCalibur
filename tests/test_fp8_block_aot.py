@@ -78,3 +78,49 @@ def test_legal_designs_compile_on_a_sample(records):
   """The cheap legality rules rarely admit a design the compiler rejects; the search's compile step catches the rest."""
   bad = [r for r in records["sample"] if not r["ok"]]
   assert len(bad) <= 1, bad
+
+
+def _signature(kernel_file: str, configs: list[TileConfig]) -> list[str]:
+  env = {k: v for k, v in os.environ.items() if k != "TRITON_INTERPRET"} | {"CUDA_VISIBLE_DEVICES": ""}
+  out = subprocess.run([sys.executable, os.path.join(HERE, "aot.py"), "--signature", kernel_file, "--configs",
+                        json.dumps([c.as_dict() for c in configs])], capture_output=True, text=True, env=env,
+                       timeout=1800)
+  assert out.returncode == 0, out.stderr[-2000:]
+  return json.loads(out.stdout.strip().splitlines()[-1])
+
+
+def _history(path: str) -> dict[str, bytes]:
+  """{sha256[:16]: source} of every committed revision of a kit file (empty without git)."""
+  import hashlib                                                              # noqa: PLC0415
+  root = os.path.join(HERE, "..", "..")
+  log = subprocess.run(["git", "-C", root, "log", "--format=%H", "--", path], capture_output=True, text=True)
+  out: dict[str, bytes] = {}
+  for rev in log.stdout.split() if log.returncode == 0 else []:
+    blob = subprocess.run(["git", "-C", root, "show", f"{rev}:{path}"], capture_output=True).stdout
+    out.setdefault(hashlib.sha256(blob).hexdigest()[:16], blob)
+  return out
+
+
+def test_fp8_path_of_equivalent_sources_is_the_same_machine_code(tmp_path):
+  """Tables measured on an older kernel.py stay valid only if its fp8 path compiles to the same SASS: every sha in
+  kernel.FP8_EQUIVALENT_SHAS is found in git history and compiles (GEMM at the shipped tiles, act_quant) to the same
+  instruction stream as the current source."""
+  import re                                                                   # noqa: PLC0415
+  src = open(os.path.join(HERE, "kernel.py")).read()
+  body = re.search(r"FP8_EQUIVALENT_SHAS = frozenset\(\{([^}]*)\}\)", src).group(1)
+  shas = set(re.findall(r"[0-9a-f]{16}", body))
+  history = _history("kernels/fp8_block_sm89/kernel.py")
+  if not history:
+    pytest.skip("no git history (tarball)")
+  assert shas <= set(history), f"not in history: {shas - set(history)}"
+  shipped = [TileConfig("once", 64, 128, 128, 8, 1, 4, 3), TileConfig("once", 32, 64, 128, 1, 1, 4, 5),
+             TileConfig("once", 128, 128, 128, 1, 1, 8, 3), TileConfig("fused", 128, 128, 128, 8, 1, 8, 2)]
+  current = _signature("current", shipped)
+  mutant = tmp_path / "kernel_mutant.py"                                      # the signature does see a math change
+  mutant.write_text(src.replace("axis=1) / 448.0", "axis=1) / 447.0"))
+  changed = [a != b for a, b in zip(_signature(str(mutant), shipped), current)]
+  assert changed == [False, False, False, True, True]                         # the fused GEMM and act_quant quantise
+  for sha in shas:
+    old = tmp_path / f"kernel_{sha}.py"
+    old.write_bytes(history[sha])
+    assert _signature(str(old), shipped) == current, sha

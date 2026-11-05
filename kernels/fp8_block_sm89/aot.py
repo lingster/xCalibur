@@ -40,14 +40,40 @@ def _ast(fn, ptr: dict, cons: dict, div16: tuple) -> triton.compiler.ASTSource:
   return triton.compiler.ASTSource(fn=fn, signature=sig, constexprs=cons, attrs=attrs)
 
 
-def _ours(cfg: TileConfig) -> triton.compiler.ASTSource:
+def _ours(cfg: TileConfig, mod=kernel) -> triton.compiler.ASTSource:
   ptr = {"A": "*bf16" if cfg.quant == "fused" else "*fp8e4nv", "As": "*fp32", "B": "*fp8e4nv", "Bs": "*fp32",
          "C": "*fp32" if cfg.SPLIT_K > 1 else "*bf16"}
   cons = {"stride_ak": 1, "stride_bk": 1, "stride_cn": 1, "BLOCK_M": cfg.BLOCK_M, "BLOCK_N": cfg.BLOCK_N,
           "BLOCK_K": cfg.BLOCK_K, "GROUP_M": cfg.GROUP_M, "SPLIT_K": cfg.SPLIT_K, "FUSED": cfg.quant == "fused",
           "DOT": kernel.DOTS["fp8"], "QG": QGROUP}
-  return _ast(kernel._gemm_kernel, ptr, cons,
+  return _ast(mod._gemm_kernel, ptr, cons,
               ("A", "As", "B", "Bs", "C", "N", "K", "stride_am", "stride_bn", "stride_cm", "stride_cs"))
+
+
+def _act_quant(mod=kernel) -> triton.compiler.ASTSource:
+  """The fp8 activation quantiser (CODES=False: native e4m3 stores), as act_quant launches it."""
+  return _ast(mod._act_quant_kernel, {"X": "*bf16", "Y": "*fp8e4nv", "S": "*fp32"},
+              {"ROWS": 16, "QG": QGROUP, "CODES": False}, ("X", "Y", "S", "stride_xm", "stride_ym"))
+
+
+def load_kernel_file(path: str):
+  """Another revision of kernel.py (e.g. from git history) as a module, for fp8_signature."""
+  import importlib.util                                                              # noqa: PLC0415
+  spec = importlib.util.spec_from_file_location(f"kernel_alt_{abs(hash(path))}", path)
+  mod = importlib.util.module_from_spec(spec)
+  spec.loader.exec_module(mod)
+  return mod
+
+
+def fp8_signature(cfgs: list[TileConfig], mod=kernel) -> list[str]:
+  """sha256 of the sm_89 SASS instruction stream (opcodes and operands, no addresses) of the fp8 GEMM per config
+  and of the fp8 act_quant: equal signatures = the same machine code, whatever else the source file holds."""
+  import hashlib                                                                     # noqa: PLC0415
+  def sig(cubin: bytes) -> str:
+    ins = sass.parse(sass.disassemble(cubin))
+    return hashlib.sha256("\n".join(f"{op} {rest}" for _, op, rest in ins).encode()).hexdigest()[:16]
+  out = [sig(_compile(_ours(c, mod), c.num_warps, c.num_stages).asm["cubin"]) for c in cfgs]
+  return out + [sig(_compile(_act_quant(mod), 4, 2).asm["cubin"])]
 
 
 def _hub(block_m: int) -> triton.compiler.ASTSource:
@@ -113,7 +139,12 @@ def main(argv=None) -> None:
   ap.add_argument("--configs", help="JSON list of TileConfig dicts")
   ap.add_argument("--sample", type=int, default=0, help="also compile this many random legal designs (seed 0)")
   ap.add_argument("--hub-grid", action="store_true", help="the stock kernel at every BLOCK_M x its 12 autotune configs")
+  ap.add_argument("--signature", help="instead: print fp8_signature of --configs for this kernel.py (or 'current')")
   a = ap.parse_args(argv)
+  if a.signature:
+    mod = kernel if a.signature == "current" else load_kernel_file(a.signature)
+    print(json.dumps(fp8_signature([TileConfig(**c) for c in json.loads(a.configs or "[]")], mod)))
+    return
   out = [{"config": c, **compile_sm89(TileConfig(**c))} for c in json.loads(a.configs or "[]")]
   if a.sample:
     import random                                                                       # noqa: PLC0415
