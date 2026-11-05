@@ -1,0 +1,21 @@
+{
+  "name": "xcalibur",
+  "owner": {
+    "name": "xArmory",
+    "url": "https://github.com/xArmory/xCalibur"
+  },
+  "metadata": {
+    "description": "xCalibur's research method as Claude Code skills: an OODA coach for experiment-driven work and a GPU kernel-campaign playbook built on it.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "xcalibur-method",
+      "source": "./plugins/xcalibur-method",
+      "description": "A coachable OODA loop for any experiment-driven work: you coach, Claude shows its reasoning at checkpoints (pre-registered predictions and falsifiers, noise floors, after-action reviews) and keeps your feedback in an append-only lessons file it reads every session. Plus a GPU inference/kernel speedup campaign skill with paired ABBA timing, A/A margins, screen-then-confirm, numerics gates and GPU discipline.",
+      "version": "0.1.0",
+      "category": "research",
+      "keywords": ["ooda", "experiments", "benchmarking", "noise-floor", "after-action-review", "gpu", "kernels", "inference", "performance"]
+    }
+  ]
+}
