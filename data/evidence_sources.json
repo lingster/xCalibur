@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-11-05",
+  "note": "Allowlisted numeric and technical fields from saved experiment receipts. Source digests identify the extraction inputs, not independently accessible raw logs. No private execution paths, infrastructure identifiers or model transcripts are distributed.",
+  "sources": [
+    {
+      "source_sha256": "34ca3b973030d253c8658a175deecef6a54df7abb7e1437f41e98d3a3a24e513",
+      "label": "H200 finite decoder search",
+      "exports": [
+        "decoder_search.json"
+      ],
+      "scope": "Finite decoder enumeration; search time, not operator latency."
+    },
+    {
+      "source_sha256": "0f69c8ec445e4459a78f048f1191eb8f6b03d4e16999c8cecd617621f91c1e9c",
+      "label": "ownership campaign evidence",
+      "exports": [
+        "structural_search.csv"
+      ],
+      "scope": "All recorded candidates in this source, including failures; ratios to each campaign parent, not judge scores."
+    },
+    {
+      "source_sha256": "8ee8ee4e3b86e6c77131d7ed872a876621e305244e0459aaa982738fc42e3fbf",
+      "label": "compute campaign evidence",
+      "exports": [
+        "structural_search.csv"
+      ],
+      "scope": "All recorded candidates in this source, including failures; ratios to each campaign parent, not judge scores."
+    },
+    {
+      "source_sha256": "a353d0d891af105b6d0f47884e478f5c357d5624b0b34a25539a4c63d0617174",
+      "label": "Deterministic complete-operator campaign",
+      "exports": [
+        "deterministic_search.json"
+      ],
+      "scope": "Separate campaign; aggregate counts and paired result only. No model inference or official submission in this batch."
+    },
+    {
+      "source_sha256": "ce6325b7e5983c31e72ac5e326fb678bd86f4a0620ad879c2610a5b709a1cf05",
+      "label": "Model plan to complete MoE implementation",
+      "exports": [
+        "model_tool_feedback.csv",
+        "model_tool_feedback.json"
+      ],
+      "scope": "One H200 native round; all six loads. Qualified but slower than its frozen parent."
+    },
+    {
+      "source_sha256": "21b0dae09127e9d2d35a7cd77e144d65cfddda4f68915313d1c37579ca8223a3",
+      "label": "Complete checkpoint LoRA linear operator",
+      "exports": [
+        "lora_operator.csv",
+        "lora_operator_samples.csv"
+      ],
+      "scope": "One linear operator forward/backward and FP32 adapter gradient accumulation; no optimizer or full-model training. Fresh seeded tensors; zero B timed, nonzero B checked."
+    },
+    {
+      "label": "ARC transfer pilot",
+      "source_sha256": "4d7d1f5d3253372c9712234f06bab09503af9b11212245576e2c416a221fdf3f",
+      "exports": [
+        "arc_transfer.csv"
+      ],
+      "scope": "Repeated conditions on four public puzzles; do not sum conditions into a larger task denominator."
+    },
+    {
+      "label": "L4 routed gate/up and SwiGLU revision",
+      "source_sha256": "77ccba84e5ee903ae091750d4a48e32fa4f40faca955df62e7f1427b04efe7dd",
+      "exports": [
+        "l4_f1.csv"
+      ],
+      "scope": "Nine F1 cases; excludes down projection and final combine. Paired against previous revision and vLLM."
+    },
+    {
+      "label": "Finite-alphabet CPU contract implementation",
+      "source_sha256": "677ddfb7aa1193712d6e368a3e9da54c5d14479965978f7117bb8b812ccd0072",
+      "exports": [
+        "../examples/finite_alphabet.py"
+      ],
+      "scope": "Public adaptation changes the output location and result labels; scalar construction and assertions are retained."
+    },
+    {
+      "label": "Direct load-pattern probe",
+      "source_sha256": "4d04dbae248c22ac4b59042d9c3787ad86066421c8f0bf42a3436a81ca6ad176",
+      "exports": [
+        "load_patterns.csv"
+      ],
+      "scope": "168 copy-only patterns; canonical byte checks; no MMA."
+    },
+    {
+      "label": "Direct complete-operator transport and composition",
+      "source_sha256": "a0b5d869a64d00c7808e7ac1c32e2f7fbe7c8067d7be1ad1037f5e76ede0695f",
+      "exports": [
+        "load_composition.csv"
+      ],
+      "scope": "54 load rows: six finalists plus three factorial cells; direct launches with stream events, read-only L2 flush, no CUDA graph replay or fixed-cost subtraction."
+    }
+  ]
+}

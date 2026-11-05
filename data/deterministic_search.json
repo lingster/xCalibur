@@ -1,0 +1,16 @@
+{
+  "compiled_plans": 44,
+  "full_operator_candidates": 28,
+  "qualified": 28,
+  "best_private_ratio": 1.0009718292609253,
+  "best_private_interval": [
+    0.9861791421289906,
+    1.0159864066998392
+  ],
+  "demonstrated_gains": 0,
+  "target": 2.7,
+  "target_achieved": false,
+  "model_inference_used": false,
+  "explicit_lifetime_plans_compiled": 4,
+  "explicit_lifetime_plans_screened_out": 4
+}

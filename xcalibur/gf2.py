@@ -21,12 +21,28 @@ the image of basis vector e_i (``columns``). Evaluating the layout at a word is 
 """
 from __future__ import annotations
 
+import operator
+
 U32 = (1 << 32) - 1
+
+
+def _rows(rows):
+  rows = tuple(operator.index(r) for r in rows)
+  if any(r < 0 for r in rows):
+    raise ValueError("GF(2) rows must be nonnegative bit masks")
+  return rows
+
+
+def _square(rows):
+  rows = _rows(rows)
+  if any(r >= 1 << len(rows) for r in rows):
+    raise ValueError("square map has input bits outside its declared width")
+  return rows
 
 
 def rank(rows) -> int:
   pivots = {}
-  for x in rows:
+  for x in _rows(rows):
     while x:
       p = x.bit_length() - 1
       if p not in pivots:
@@ -38,11 +54,17 @@ def rank(rows) -> int:
 
 def apply(rows, word: int) -> int:
   """Map a word: output bit i is the parity of (row_i AND word)."""
-  return sum(((r & word).bit_count() & 1) << i for i, r in enumerate(rows))
+  word = operator.index(word)
+  if word < 0:
+    raise ValueError("input word must be nonnegative")
+  return sum(((r & word).bit_count() & 1) << i for i, r in enumerate(_rows(rows)))
 
 
 def compose(a, b):
   """Rows of a(b(x))."""
+  a, b = _rows(a), _rows(b)
+  if any(r >= 1 << len(b) for r in a):
+    raise ValueError("outer map reads beyond the inner map's output width")
   out = []
   for row in a:
     acc = 0
@@ -55,6 +77,8 @@ def compose(a, b):
 
 
 def inverse(rows):
+  """Invert a square map; reject out-of-width masks before augmenting it."""
+  rows = _square(rows)
   n = len(rows)
   a = [r | (1 << (n + i)) for i, r in enumerate(rows)]
   for i in range(n):
@@ -69,24 +93,37 @@ def inverse(rows):
 
 
 def columns(rows):
-  """Images of the basis vectors: the F2 strides of the equivalent CuTe layout."""
+  """Basis images of a square map: the F2 strides of the equivalent CuTe layout."""
+  rows = _square(rows)
   return tuple(apply(rows, 1 << i) for i in range(len(rows)))
 
 
 def from_function(fn, bits: int = 32):
-  """The rows of a linear bit function fn(word) -> word (checked linear on the basis only; verify with equal())."""
-  images = [fn(1 << i) for i in range(bits)]
+  """Extract a square map from a function already known to be linear over GF(2).
+
+  Checking zero and basis images does not prove an arbitrary function linear.
+  Nonlinear functions require a separate proof or exhaustive finite-domain check.
+  """
+  if not isinstance(bits, int) or isinstance(bits, bool) or bits < 1:
+    raise ValueError("bits must be a positive integer")
+  if operator.index(fn(0)) != 0:
+    raise ValueError("a linear function must map zero to zero")
+  images = [operator.index(fn(1 << i)) for i in range(bits)]
+  if any(x < 0 or x >= 1 << bits for x in images):
+    raise ValueError("function output exceeds the declared bit width")
   return tuple(sum(((images[i] >> r) & 1) << i for i in range(bits)) for r in range(bits))
 
 
 def rotation(k: int, bits: int = 32):
+  if not isinstance(bits, int) or isinstance(bits, bool) or bits < 1:
+    raise ValueError("bits must be a positive integer")
   k %= bits
   return from_function(lambda q: ((q << k) | (q >> ((bits - k) % bits))) & ((1 << bits) - 1), bits)
 
 
 def equal(a, b) -> bool:
-  """Exact equality of two maps for every input word (compare basis images)."""
-  return columns(a) == columns(b)
+  """Exact equality of row maps, including every input bit in each mask."""
+  return _rows(a) == _rows(b)
 
 
 def packing_transform(decoder, reference):

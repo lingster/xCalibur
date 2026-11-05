@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import math
+import numbers
 from dataclasses import dataclass
 
 
@@ -45,19 +46,62 @@ ARCHS = {"h200": H200}
 
 def launch_register_cap(arch: Arch, warps: int, ctas_per_sm: int = 1) -> int:
   """Registers per thread at launch: regs / (128 x ceil(warps / 4) x CTAs per SM), floored to 8, at most 255."""
+  _integer(warps, "warps", 1)
+  _integer(ctas_per_sm, "ctas_per_sm", 1)
   cap = arch.regs_per_sm // (ctas_per_sm * 128 * math.ceil(warps / arch.subpartitions)) // 8 * 8
   return min(255, cap)
+
+
+def _integer(value, label, minimum):
+  if not isinstance(value, numbers.Integral) or isinstance(value, bool) or value < minimum:
+    raise ValueError(f"{label} must be an integer >= {minimum}")
+
+
+def _validate_plan(squads, resources, ctas_per_sm, extra_smem_bytes):
+  """Validate the input domain before resource arithmetic can make an invalid plan pass."""
+  _integer(ctas_per_sm, "ctas_per_sm", 1)
+  _integer(extra_smem_bytes, "extra_smem_bytes", 0)
+  for collection, kind in ((squads, "squad"), (resources, "resource")):
+    names = [item["name"] for item in collection]
+    if any(not isinstance(name, str) or not name for name in names) or len(set(names)) != len(names):
+      raise ValueError(f"{kind} names must be nonempty, unique strings")
+  for s in squads:
+    _integer(s["warps"], "squad warps", 1)
+    if s["warps"] > 32:
+      raise ValueError("a squad cannot exceed 32 warps")
+    if "regs" in s:
+      _integer(s["regs"], "setmaxnreg target", 24)
+      if s["regs"] > 256:
+        raise ValueError("setmaxnreg target must be <= 256")
+    if "regs_needed" in s:
+      _integer(s["regs_needed"], "regs_needed", 1)
+  for r in resources:
+    for key in ("stages", "stride_bytes"):
+      _integer(r[key], key, 1)
+    align = r.get("align", 16)
+    _integer(align, "align", 1)
+    if align & (align - 1):
+      raise ValueError(f"resource {r['name']}: align must be a power of two")
+    for phase in r["phases"]:
+      owners = phase["owners"]
+      if not isinstance(owners, (list, tuple)) or not owners or any(not isinstance(o, str) for o in owners):
+        raise ValueError("phase owners must be a nonempty sequence of squad names")
+      if len(set(owners)) != len(owners):
+        raise ValueError("phase owners must be unique")
+      if "tx_bytes" in phase:
+        _integer(phase["tx_bytes"], "tx_bytes", 0)
 
 
 def plan_of(squads, resources):
   """Build a plan from tuples: squads [(name, warps)], resources [(name, stages, stride, [(owner, tx_bytes|None)])]."""
   return {"squads": [{"name": n, "warps": w} for n, w in squads],
       "resources": [{"name": n, "stages": st, "stride_bytes": b,
-                           "phases": [{"owners": [o], **({"tx_bytes": tx} if tx else {})} for o, tx in ph]}
+                           "phases": [{"owners": [o], **({"tx_bytes": tx} if tx is not None else {})} for o, tx in ph]}
                           for n, st, b, ph in resources]}
 
 
 def warpspeed_check(squads, resources, ctas_per_sm=1, extra_smem_bytes=0, arch: Arch | str = H200):
+  _validate_plan(squads, resources, ctas_per_sm, extra_smem_bytes)
   arch = ARCHS[arch] if isinstance(arch, str) else arch
   violations = []
 
@@ -176,7 +220,7 @@ SCHEMA = {"type": "function", "function": {
       "properties": {"name": {"type": "string"}, "stages": {"type": "integer", "minimum": 1},
                            "stride_bytes": {"type": "integer", "minimum": 1}, "align": {"type": "integer", "minimum": 1},
                            "phases": {"type": "array", "items": {"type": "object", "required": ["owners"], "properties": {
-                               "owners": {"type": "array", "items": {"type": "string"}}, "tx_bytes": {"type": "integer", "minimum": 0}}}}}}},
+                               "owners": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {"type": "string"}}, "tx_bytes": {"type": "integer", "minimum": 0}}}}}}},
     "ctas_per_sm": {"type": "integer", "minimum": 1}, "extra_smem_bytes": {"type": "integer", "minimum": 0}}}}}
 
 

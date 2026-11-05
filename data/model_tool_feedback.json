@@ -1,0 +1,10 @@
+{
+  "status": "measured",
+  "qualified": true,
+  "geomean_speedup": 0.9374891401583557,
+  "interval": [
+    0.9236346208456707,
+    0.951551477260731
+  ],
+  "baseline_AA": 1.0000197177917887
+}

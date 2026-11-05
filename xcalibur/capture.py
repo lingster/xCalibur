@@ -3,11 +3,12 @@ Export without drift: capture exactly what a measured design compiles, and edit 
 
 A design measured inside a search harness is not the same object as the file you ship. Two tools close the gap:
   * ``Capture`` stands in for the compiler entry point (e.g. torch's ``load_inline``) and records every build's
-    sources and flags instead of compiling, so a rebuilt file can be checked byte-identical to the measured one;
-  * ``replace_assignment`` swaps one module-level string constant through the AST and proves nothing else moved.
+    inputs instead of compiling, so exported source units and build options can be compared to those measured;
+  * ``replace_assignment`` swaps one module-level value through the AST and preserves the surrounding bytes.
 """
 
 import ast
+import copy
 import json
 
 
@@ -25,20 +26,33 @@ class Capture:
     self.builds = []
 
   def __call__(self, **kw):
-    srcs = kw.get("cuda_sources")
-    self.builds.append({"flags": list(kw.get("extra_cuda_cflags") or []),
-                        "sources": srcs if isinstance(srcs, str) else "\n".join(srcs or []),
-                        "cpp": kw.get("cpp_sources") or "", "functions": list(kw.get("functions") or [])})
+    # Keep source units, flag order, binding declarations and every other option.
+    # In particular, repeated builds with the same CUDA flags need not be identical.
+    self.builds.append(copy.deepcopy({
+      "flags": kw.get("extra_cuda_cflags"), "sources": kw.get("cuda_sources"),
+      "cpp": kw.get("cpp_sources"), "functions": kw.get("functions"),
+      "options": {k: v for k, v in kw.items()
+                  if k not in {"extra_cuda_cflags", "cuda_sources", "cpp_sources", "functions"}},
+    }))
     return _Stub()
 
   def keyed(self):
-    return {json.dumps(sorted(b["flags"])): b for b in self.builds}
+    """Full build records grouped by content, retaining repeated calls."""
+    groups = {}
+    for build in self.builds:
+      key = json.dumps(build, sort_keys=True, ensure_ascii=False, allow_nan=False)
+      groups.setdefault(key, []).append(build)
+    return groups
 
   @staticmethod
   def same(a, b) -> bool:
-    """True when both captures hold the same builds with byte-identical sources."""
+    """Compare build multisets, including options and multiplicity, ignoring call order.
+
+    This checks captured inputs, not compiler versions, binaries or runtime behavior.
+    Options must be JSON-serializable, as with ordinary load_inline arguments.
+    """
     ka, kb = a.keyed(), b.keyed()
-    return ka.keys() == kb.keys() and all(ka[k]["sources"] == kb[k]["sources"] and ka[k]["cpp"] == kb[k]["cpp"] for k in ka)
+    return ka.keys() == kb.keys() and all(len(ka[k]) == len(kb[k]) for k in ka)
 
 
 class _Stub:
@@ -48,19 +62,28 @@ class _Stub:
 
 def replace_assignment(source: str, name: str, value) -> str:
   """
-  Replace the value of the module-level assignment ``name = ...`` and check that every other line is unchanged.
+  Replace one unambiguous module-level assignment's value, preserving all surrounding bytes.
+  Annotated assignments are supported; chained and repeated assignments are rejected.
 
   Examples:
     replace_assignment("A = 1\\nB = 'x'\\n", "B", "y") == "A = 1\\nB = 'y'\\n"
   """
   tree = ast.parse(source)
-  node = next(n for n in tree.body if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in n.targets))
-  lines = source.splitlines(keepends=True)
-  a = sum(map(len, lines[:node.value.lineno - 1])) + node.value.col_offset
-  b = sum(map(len, lines[:node.value.end_lineno - 1])) + node.value.end_col_offset
-  out = source[:a] + repr(value) + source[b:]
-  keep = lambda s: [l for i, l in enumerate(s.splitlines()) if not (node.lineno - 1 <= i <= node.end_lineno - 1)]
-  assert keep(source)[: node.lineno - 1] == keep(out)[: node.lineno - 1], "lines before the assignment changed"
-  assert keep(source)[node.lineno - 1:] == [l for l in out.splitlines()][node.lineno:], "lines after the assignment changed"
+  matches = []
+  for node in tree.body:
+    targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
+    if any(isinstance(t, ast.Name) and t.id == name for t in targets):
+      if len(targets) != 1 or node.value is None:
+        raise ValueError(f"{name!r} must have a single assignment with a value")
+      matches.append(node.value)
+  if len(matches) != 1:
+    raise ValueError(f"expected one module-level assignment to {name!r}, found {len(matches)}")
+  node = matches[0]
+  # AST columns are UTF-8 byte offsets, not Python string indices.
+  encoded = source.encode("utf-8")
+  lines = encoded.splitlines(keepends=True)
+  a = sum(map(len, lines[:node.lineno - 1])) + node.col_offset
+  b = sum(map(len, lines[:node.end_lineno - 1])) + node.end_col_offset
+  out = (encoded[:a] + repr(value).encode("utf-8") + encoded[b:]).decode("utf-8")
   compile(out, "<replaced>", "exec")
   return out

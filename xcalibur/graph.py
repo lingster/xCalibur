@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import math
+import statistics
 from dataclasses import dataclass, field
 
 
@@ -69,7 +70,7 @@ class DesignGraph:
       for L in self.loads:
         xs = sorted(r[L] for r in rs if L in r)
         if xs:
-          med[L] = xs[len(xs) // 2]
+          med[L] = statistics.median(xs)
       out.append({"field": k, "from": json.loads(f), "to": json.loads(t), "pairs": len(rs), "median": med})
     return sorted(out, key=lambda e: -e["pairs"])
 

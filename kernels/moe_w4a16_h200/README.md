@@ -4,8 +4,6 @@ One routed-experts layer of a large MoE, as a single persistent CUDA kernel: 8 o
 owned per GPU, 4-bit NVFP4 weights, BF16 activations. Judged at **2.407×** over SGLang (geometric mean of six loads,
 one H200) [M].
 
-![Speedup per load](../../docs/figures/moe_judge_speedups.png)
-
 ## The computation
 
 For token $t$ with routes $s = 1..8$, expert $e_{t,s}$ and router weight $w_{t,s}$:
@@ -45,7 +43,7 @@ prediction. Changes 1 and 6 were in our starting kernel; 2–5 came out of the s
    XOR on both 4-bit codes in each byte). The kernel now holds $g' = -g$ and $u' = -u$, and
    $\operatorname{SiLU}(g)\,u = \dfrac{g\,u}{1 + e^{-g}} = \dfrac{g'\,u'}{1 + e^{g'}}$, so the exponent needs no negation.
 2. **A new weight decoder with a proven packing.** The decode from packed codes to BF16 fields is a linear map over
-   GF(2) (see [notebook 01](../../notebooks/01_decoders_over_gf2.ipynb) and [chapter 2](../../docs/02-exact-layer.md)).
+   GF(2) (see [notebook 01](../../notebooks/01_decoders_over_gf2.ipynb) and [chapter 2](../../docs/formulation.md#gf2)).
    We enumerated all 1,816 legal decoder graphs and measured hundreds of them. The shipped decoder is
 
    ```c

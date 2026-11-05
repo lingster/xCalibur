@@ -2,10 +2,10 @@
 xCalibur: exact-first, measurement-driven GPU kernel co-design.
 
   exact layer    gf2 (decoder bit maps, CuTe F2 layouts), warpspeed (CTA plan accounting), reach (what touches which build)
-  measurement    bench (judge-faithful paired timing), stats (intervals, pooling by build identity, binding)
+  measurement    bench (paired graph timing and raw samples), stats (intervals, repeated evidence, binding)
   proposers      surrogate (LightGBM bootstrap UCB), game (the measured search loop), planner (LM planner + refiner)
   memory         graph (the design graph, compact listing, retrieval)
-  shipping       capture (byte-identical builds, structural edits), gates (rules, lint, run cards)
+  shipping       capture (captured build inputs, structural edits), gates (rules, lint, run cards)
 """
 
 from .gf2 import *

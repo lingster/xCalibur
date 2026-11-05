@@ -1,11 +1,18 @@
-# TG4DAC kernels on RTX PRO 6000 Blackwell (SM120)
+# Gemma 4 31B kernels: TG4DAC on SM120
 
-The kernels from TG4DAC, where small language models planned GPU kernels for Gemma 4 31B and a frontier model
-implemented the plans as written ([chapter 1](../../docs/01-tg4dac.md)). Each file is a self-contained benchmark:
-it builds the incumbent, the speed-of-light bound and every implemented design, checks them against a reference, and
-times them in the same run.
+This directory contains **Gemma 4 31B attention and dense W4A16 MLP + LoRA kernels**
+for RTX PRO 6000 Blackwell (SM120). TG4DAC is the co-design study behind them:
+separate models planned and refined the physical designs, and a frontier coding
+model implemented and measured them ([the study](../../docs/studies.md#gemma4)).
 
-![Prefill attention](../../docs/figures/tg4dac_prefill.png)
+The target workload is Gemma 4 31B. The planner and refiner also used Gemma 4 31B,
+with separate adapters; their role as designers is distinct from the model whose
+operators these kernels execute.
+
+These are hardware-specific benchmark sources. `attention.py` reuses the NVRTC/driver helpers
+in the adjacent `mlp.py`; keep both files together. They construct reference and
+candidate implementations and time them in the same run. Analytical
+speed-of-light bounds are labeled separately from measured implementations.
 
 ## `attention.py`: attention, a held-out problem
 
@@ -33,12 +40,13 @@ Measured against vLLM in the same run [M]: **4.6×** on sliding-window prefill, 
 [`data/tg4dac_attention.csv`](../../data/tg4dac_attention.csv), [`data/tg4dac_e2e.csv`](../../data/tg4dac_e2e.csv).
 
 ```bash
-python attention.py --B 1 8 --L 4096 32768 131072 --prefill-M 7131 15329
+python kernels/tg4dac_sm120/attention.py --B 1 8 --L 4096 32768 131072 --prefill-M 7131 15329
 ```
 
-## `mlp.py`: the dense 4-bit MLP with a LoRA adapter
+## `mlp.py`: Gemma 4's dense 4-bit MLP with LoRA
 
-The first TG4DAC round: a dense W4A16 MLP (INT4, group-32 scales) with a rank-16 LoRA on every projection,
+The first TG4DAC round targeted Gemma 4 31B's dense W4A16 MLP (INT4, group-32
+scales), with rank-16 LoRA on every projection,
 
 $$
 g = XW_g^{\top} + 2\,(XA_g^{\top})B_g^{\top}, \quad u = XW_u^{\top} + 2\,(XA_u^{\top})B_u^{\top}, \quad
@@ -52,12 +60,20 @@ GEMV for 8 tokens. They already ran near 80% of the matrix units' peak, and no m
 that sent TG4DAC to attention.
 
 ```bash
-python mlp.py --M 8 15329 --synthetic
+python kernels/tg4dac_sm120/mlp.py --M 8 15329 --synthetic
 ```
 
 ## Requirements
 
-An SM120 GPU (RTX PRO 6000 Blackwell), PyTorch with CUDA, Triton; `mlp.py` compiles with NVRTC through `ctypes`
-(no `nvcc` needed) and can load the real Gemma 4 weights from Hugging Face, or run on synthetic ones.
+An SM120 GPU (RTX PRO 6000 Blackwell), PyTorch with CUDA and Triton. The attention
+reference imports vLLM's internal Triton attention implementation; the recorded
+study used vLLM 0.32 and those internal APIs may differ in other versions.
+`mlp.py` compiles with NVRTC through `ctypes` (no `nvcc` needed) and can load real
+Gemma 4 weights or use synthetic ones. For local weights use `--weights` or the
+standard Hugging Face cache environment variables. The recorded whole-model
+vLLM integration and trained planner/refiner adapters are not bundled.
+
+The public sources and analysis are available; reproducing the historical GPU
+numbers still requires matching hardware, dependencies and input contracts.
 
 Apache 2.0, like the rest of the repository ([LICENSE](../../LICENSE)).

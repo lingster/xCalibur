@@ -26,6 +26,13 @@ measured against, and the models, data and libraries we ran. Keys match the cita
 - <a id="lightgbm"></a>**[LightGBM]** Microsoft. *LightGBM.* The ranker in the measured game. [link](https://github.com/microsoft/LightGBM)
 - <a id="kernelbot"></a>**[KernelBot]** GPU MODE. *KernelBot data.* The public submissions in our knowledge base. [link](https://huggingface.co/datasets/GPUMODE/kernelbot-data)
 
+## Search and games
+
+- <a id="rebel"></a>**ReBeL.** *Combining Deep Reinforcement Learning and Search for Imperfect-Information Games.* The search/self-play lineage adapted to the project's finite constructor/challenger game. [Paper](https://arxiv.org/abs/2007.13544) · [Official implementation](https://github.com/facebookresearch/rebel)
+- <a id="uct"></a>**UCT.** L. Kocsis and C. Szepesvári. *Bandit Based Monte-Carlo Planning.* The tree-search allocation rule discussed in the structural formulation. [Paper](https://aima.cs.berkeley.edu/~russell/classes/cs294/s11/readings/Kocsis%2BSzepesvari%3A2006.pdf)
+- <a id="cfr-plus"></a>**CFR+.** O. Tammelin et al. *Solving Heads-Up Limit Texas Hold'em.* Regret-based game solving; the chapter states the distinct utility and finite-game scope of our experiment. [Paper](https://ijcai.org/proceedings/2015/97)
+- <a id="libratus"></a>**Libratus.** N. Brown and T. Sandholm. *Libratus: The Superhuman AI for No-Limit Poker.* The precedent for abstract search, nested subgames and abstraction repair. [Architecture](https://ijcai.org/proceedings/2017/4) · [Safe and nested subgame solving](https://arxiv.org/abs/1705.02955)
+
 ---
 
 [← Contents](README.md)

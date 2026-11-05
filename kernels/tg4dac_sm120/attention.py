@@ -1223,8 +1223,10 @@ _WS = {}
 def ws_module(name, src):
     """Compile once per process with the MLP round bench's NVRTC/driver path (the user's toolchain)."""
     if name not in _WS:
-        sys.path.insert(0, "/content/MLP round")
-        import bench as fb
+        if __package__:
+            from . import mlp as fb
+        else:
+            import mlp as fb
         fb._setup_torch()
         drv, nv = fb.Driver(), fb.NVRTC()
         cc = torch.cuda.get_device_capability()

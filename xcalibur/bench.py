@@ -1,14 +1,13 @@
-"""Paired, judge-faithful timing of a candidate kernel against a reference.
+"""Paired CUDA-graph replay timing, with raw observations retained.
 
-The method copies what GPU kernel judges typically do, and each piece removes a known source of error:
+Each callable is captured once, with a read flush before every timed replay.
+Alternating reference/candidate order reduces order bias; an A/A run estimates
+repeatability. Match this protocol to the workload and benchmark being studied.
 
-* **CUDA graphs.** Each callable is captured once and replayed, so Python and launch overhead is the same for both.
-* **Cold L2 by a read.** Before every replay a large buffer (default 256 MiB) is *read*. A write flush leaves L2 full
-  of dirty lines whose write-back is then charged to the timed kernel; we measured that error at 5-11 us per replay.
-* **ABBA pairs.** Candidate and reference alternate (A B B A ...), so drift (clocks, temperature) cancels in the ratio.
-* **A null replay.** The fixed cost of replaying a graph (about 16-19 us on an H200 in our setup) is measured and
-  subtracted, otherwise it dilutes every ratio of microsecond-scale kernels.
-* **A/A.** Timing the reference against itself in the same session gives the noise floor to judge a gain against.
+No timing correction is applied by default. Optional ``subtract_null=True``
+subtracts a separately timed tiny-add graph, which includes real kernel work and
+is not a universal launch-overhead estimate. It needs independent calibration.
+Both raw and corrected samples remain available for inspection.
 
   >>> import torch, torch.nn.functional as F
   >>> x = torch.randn(16, 8192, device="cuda", dtype=torch.bfloat16)
@@ -19,6 +18,7 @@ The method copies what GPU kernel judges typically do, and each piece removes a 
 from __future__ import annotations
 
 import statistics
+import math
 
 from .stats import bootstrap_ci
 
@@ -57,14 +57,17 @@ class Bench:
     return a.elapsed_time(b) * 1000.0
 
   def null_us(self, n: int = 40) -> float:
+    """Cached tiny-add graph timing for optional, explicitly calibrated subtraction."""
     if self._null is None:
       tiny = self.torch.zeros(1, device="cuda")
       g = self.graph(lambda: tiny.add_(0))
       self._null = statistics.median(self.replay_us(g) for _ in range(n))
     return self._null
 
-  def paired(self, candidate, reference, pairs: int = 30, subtract_null: bool = True) -> dict:
+  def paired(self, candidate, reference, pairs: int = 30, subtract_null: bool = False) -> dict:
     """ABBA-paired times of candidate vs reference; ratio > 1 means the candidate is faster."""
+    if not isinstance(pairs, int) or isinstance(pairs, bool) or pairs < 1:
+      raise ValueError("pairs must be a positive integer")
     gc, gr = self.graph(candidate), self.graph(reference)
     tc, tr = [], []
     for i in range(pairs):
@@ -73,15 +76,25 @@ class Bench:
       else:
         tc.append(self.replay_us(gc)); tr.append(self.replay_us(gr))
     z = self.null_us() if subtract_null else 0.0
-    tc, tr = [x - z for x in tc], [x - z for x in tr]
+    raw_tc, raw_tr = tc, tr
+    if not math.isfinite(z) or z < 0:
+      raise ValueError("calibration must be finite and nonnegative")
+    if any(not math.isfinite(t) or t <= 0 for t in raw_tc + raw_tr):
+      raise ValueError("raw timing samples must be finite and positive")
+    tc, tr = [x - z for x in raw_tc], [x - z for x in raw_tr]
+    if any(t <= 0 for t in tc + tr):
+      raise ValueError("calibration subtraction must leave positive timing samples")
     ratios = [r / c for r, c in zip(tr, tc)]
     return {"candidate_us": statistics.median(tc), "reference_us": statistics.median(tr),
-        "ratio": statistics.median(ratios), "ci": bootstrap_ci(ratios), "null_us": z, "pairs": pairs}
+        "ratio": statistics.median(ratios), "ci": bootstrap_ci(ratios), "null_us": z, "pairs": pairs,
+        "raw_candidate_samples_us": raw_tc, "raw_reference_samples_us": raw_tr,
+        "candidate_samples_us": tc, "reference_samples_us": tr, "ratios": ratios,
+        "subtract_null": subtract_null, "protocol": "cuda_graph_read_flush_abba"}
 
-  def aa(self, reference, pairs: int = 30) -> dict:
+  def aa(self, reference, pairs: int = 30, subtract_null: bool = False) -> dict:
     """The reference against itself: the session's noise floor."""
-    return self.paired(reference, reference, pairs)
+    return self.paired(reference, reference, pairs, subtract_null=subtract_null)
 
 
-def paired(candidate, reference, pairs: int = 30, **kw) -> dict:
-  return Bench(**kw).paired(candidate, reference, pairs)
+def paired(candidate, reference, pairs: int = 30, subtract_null: bool = False, **kw) -> dict:
+  return Bench(**kw).paired(candidate, reference, pairs, subtract_null=subtract_null)

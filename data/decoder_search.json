@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "hardware": "NVIDIA H200",
+  "scope": "Finite decoder enumeration; search time, not operator latency.",
+  "raw_combinations": 5989005,
+  "legal_graphs": 1816,
+  "output_permutations_per_graph": 24,
+  "cpu_cuda_solution_sets_equal": true,
+  "flat_cpu_ms": 350.0109399999998,
+  "factored_cpu_ms": 7.009114999999788,
+  "warm_gpu_wall_ms": 1.345574000000127,
+  "warm_gpu_event_ms": 1.315264020115137,
+  "compile_ms": 888.5234510000001,
+  "first_transfer_and_pair_build_ms": 125.5876770000004,
+  "excluded_from_warm_time": [
+    "compilation",
+    "CUDA initialization",
+    "allocation",
+    "upload and pair construction"
+  ],
+  "warm_samples": [
+    {
+      "wall_ms": 1.4246450000001687,
+      "count_ms": 0.6832320094108582,
+      "scan_ms": 0.014208000153303146,
+      "emit_ms": 0.6432960033416748
+    },
+    {
+      "wall_ms": 1.3531440000003059,
+      "count_ms": 0.6618880033493042,
+      "scan_ms": 0.014208000153303146,
+      "emit_ms": 0.6432639956474304
+    },
+    {
+      "wall_ms": 1.350293999999863,
+      "count_ms": 0.6607679724693298,
+      "scan_ms": 0.013952000066637993,
+      "emit_ms": 0.6444479823112488
+    },
+    {
+      "wall_ms": 1.3445629999999653,
+      "count_ms": 0.6565120220184326,
+      "scan_ms": 0.01375999953597784,
+      "emit_ms": 0.6439359784126282
+    },
+    {
+      "wall_ms": 1.345574000000127,
+      "count_ms": 0.6567040085792542,
+      "scan_ms": 0.014240000396966934,
+      "emit_ms": 0.644320011138916
+    },
+    {
+      "wall_ms": 1.3433530000002136,
+      "count_ms": 0.6556800007820129,
+      "scan_ms": 0.01398400031030178,
+      "emit_ms": 0.6440320014953613
+    },
+    {
+      "wall_ms": 1.3450439999997954,
+      "count_ms": 0.6582720279693604,
+      "scan_ms": 0.01398400031030178,
+      "emit_ms": 0.6424319744110107
+    },
+    {
+      "wall_ms": 1.3557240000006132,
+      "count_ms": 0.6691840291023254,
+      "scan_ms": 0.013952000066637993,
+      "emit_ms": 0.6446400284767151
+    },
+    {
+      "wall_ms": 1.3428349999999867,
+      "count_ms": 0.6552320122718811,
+      "scan_ms": 0.014208000153303146,
+      "emit_ms": 0.6439679861068726
+    },
+    {
+      "wall_ms": 1.3429240000002451,
+      "count_ms": 0.6556479930877686,
+      "scan_ms": 0.01398400031030178,
+      "emit_ms": 0.6433280110359192
+    },
+    {
+      "wall_ms": 1.3478240000006636,
+      "count_ms": 0.658623993396759,
+      "scan_ms": 0.01398400031030178,
+      "emit_ms": 0.643775999546051
+    }
+  ]
+}

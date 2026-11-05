@@ -1,0 +1,13 @@
+# Publication checks exercise repository-only tools and hardware source files.
+exclude tests/test_public.py
+
+# Keep local research and operator state out of source distributions.
+prune garage
+prune .archive
+prune .agents
+prune .codex
+prune .aws
+prune .venv
+prune .secrets
+prune .kaggle
+global-exclude *.pem *.key

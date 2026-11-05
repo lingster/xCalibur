@@ -5,3 +5,24 @@ __pycache__/
 .pytest_cache/
 .venv/
 tests/ablations/
+
+# Local research and operator state are never part of the public distribution.
+/garage/
+/.archive/
+/.agents/
+/.codex/
+/.aws/
+/.vscode/
+/AA2.md
+/README2.md
+.env
+.env.*
+!.env.example
+**/.secrets/
+**/.kaggle/
+*.pem
+*.key
+credentials.json
+token.json
+.ipynb_checkpoints/
+/dist/

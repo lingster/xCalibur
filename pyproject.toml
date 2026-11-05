@@ -18,6 +18,7 @@ search = ["lightgbm"]
 retrieval = ["sentence-transformers"]
 cute = ["nvidia-cutlass"]
 test = ["pytest"]
+notebooks = ["pandas", "matplotlib", "nbformat", "nbclient", "ipykernel", "lightgbm"]
 
 [tool.setuptools]
 packages = ["xcalibur"]

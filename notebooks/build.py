@@ -5,15 +5,28 @@
 """
 import os
 import sys
+import hashlib
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import nbformat as nbf
 from nbclient import NotebookClient
+from jupyter_client import KernelManager
+from research import notebooks as research_notebooks
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 md, code = nbf.v4.new_markdown_cell, nbf.v4.new_code_cell
-SETUP = "import sys; sys.path[:0] = ['..', '.']\nimport numpy as np, pandas as pd, matplotlib.pyplot as plt\nimport xcalibur as xc\nfrom style import C, SEQ, MUTED, INK, DATA, save, note"
+SETUP = """import sys
+from pathlib import Path
+ROOT = Path.cwd()
+if not (ROOT / "xcalibur").is_dir():
+    ROOT = ROOT.parent
+sys.path[:0] = [str(ROOT), str(ROOT / "notebooks")]
+import numpy as np, pandas as pd, matplotlib.pyplot as plt
+from IPython.display import display
+import xcalibur as xc
+from style import C, SEQ, MUTED, INK, DATA, save, note"""
 
 NB = {}
 
@@ -73,6 +86,7 @@ the same bits, but $T = D^{-1}P$ repacks the weights in `prepare()` so that $D(T
 Here $T$ turns out to be a permutation: a pure bit shuffle, exactly the kind of lossless repacking the rules allow."""),
 code(r"""D = xc.compose(P, xc.rotation(8))
 T = xc.packing_transform(D, P)
+assert xc.compose(D, T) == P  # exact equality of the complete linear maps
 rng = np.random.default_rng(0)
 words = [int(w) for w in rng.integers(0, 2**32, 2000)]
 print("D(T(w)) == P(w) on 2,000 random words:", all(xc.apply(D, xc.apply(T, w)) == xc.apply(P, w) for w in words))
@@ -373,9 +387,13 @@ $$
 \bar g > m, \qquad \min_i g_i > 0 .
 $$
 
-This notebook runs the full loop on a synthetic problem with one planted 2% gain (decoder 11 on the 16-token load)
-and many look-alikes. It binds the gain in round 2 at about +2.2%: close to the truth, and a little high, because the
-binder is still the best of several noisy candidates (the winner's curse from notebook 03, made small by replication)."""),
+This notebook runs the loop on a synthetic problem with one planted 2% gain
+(decoder 11 on the 16-token load) and many look-alikes. The configuration below
+requires three confirmation rounds. A design nominated for multiple loads is
+measured once, and each load/build identity contributes at most one observation
+per round. The trace and figure show when the rule is met. This repeat-and-margin
+rule is a heuristic, not a confidence-interval test; selection can still bias the
+reported gain above the planted truth."""),
 code(SETUP + r"""
 import itertools, math, random
 LOADS = ("m1", "m16", "m32")
@@ -559,7 +577,7 @@ md(r"""## Query 1: the shipped design's neighbourhood
 
 All 393 designs one decoder edit away from the shipped design, placed around it by their six-load effect. None reads
 more than half a percent above it; 18 sit within noise; the rest are slower. Read from the graph, that is the
-evidence that the shipped decoder is a local optimum of this space, before any confirm is spent."""),
+evidence that this screened neighbourhood has no resolved improvement. It does not certify a local optimum or replace confirmation."""),
 code(r"""ship = next(n for n in g.nodes if n.fields == {"compute": "hfma2_group_d1", "activation": "register", "decoder": "B"})
 nb = []
 for a, b, k, x, y, r in edges:
@@ -608,16 +626,48 @@ pd.DataFrame(rows)"""),
 ]
 
 
+NB.update(research_notebooks(SETUP))
+
+EVIDENCE = {
+  "01": "CPU linear-map proof with recorded production-search counts; the CUDA enumerator is not run here.",
+  "02": "CPU resource accounting; passing does not prove native synchronization or actual compiler allocation.",
+  "03": "Recorded timing observations plus a statistical illustration; no hardware timing is performed here.",
+  "04": "Archived judge and paired-study data; scores are historical snapshots, not live standings.",
+  "05": "Synthetic seeded objective exercising the public search loop; no measured GPU speedup.",
+  "06": "Recorded SM120 attention and end-to-end studies; operator latency and model throughput have different scopes.",
+  "07": "Recorded design observations with offline hashed retrieval; neighbourhood screens do not certify an optimum.",
+}
+
+
 def build(only=None):
+  if only and not any(name.startswith(only) for name in NB):
+    raise SystemExit(f"No notebook matches prefix {only!r}")
   os.environ["PYTHONPATH"] = str(ROOT) + os.pathsep + os.environ.get("PYTHONPATH", "")
   for name, cells in NB.items():
     if only and not name.startswith(only):
       continue
+    cells = list(cells)
+    if name[:2] in EVIDENCE:
+      cells.insert(1, md("**Evidence and execution:** " + EVIDENCE[name[:2]]))
+    cells.append(md("[Notebook guide](README.md) · [Documentation](../docs/README.md#reading-order) · [Data provenance](../data/README.md)"))
+    for i, cell in enumerate(cells):
+      cell["id"] = hashlib.sha256(f"{name}:{i}".encode()).hexdigest()[:12]
     nb = nbf.v4.new_notebook(cells=cells, metadata={"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}})
-    NotebookClient(nb, timeout=900, kernel_name="python3", resources={"metadata": {"path": str(HERE)}}).execute()
+    km = KernelManager(kernel_name="python3")
+    km.kernel_spec.argv = [sys.executable, "-m", "ipykernel_launcher", "-f", "{connection_file}"]
+    try:
+      NotebookClient(nb, timeout=900, startup_timeout=30, km=km, record_timing=False,
+                     resources={"metadata": {"path": str(HERE)}}).execute()
+    finally:
+      if km.has_kernel:
+        km.shutdown_kernel(now=True)
+      km.cleanup_resources()
     nbf.write(nb, HERE / f"{name}.ipynb")
-    print("built", name)
+    print("built", name, flush=True)
 
 
 if __name__ == "__main__":
-  build(sys.argv[1] if len(sys.argv) > 1 else None)
+  with TemporaryDirectory(prefix="xcalibur-notebooks-") as runtime:
+    os.environ["IPYTHONDIR"] = str(Path(runtime) / "ipython")
+    os.environ["JUPYTER_RUNTIME_DIR"] = str(Path(runtime) / "jupyter")
+    build(sys.argv[1] if len(sys.argv) > 1 else None)

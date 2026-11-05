@@ -2315,8 +2315,7 @@ def _find_local(args):
         paths.append(os.environ["FORGE_WEIGHTS"])
     roots = [os.environ.get("HF_HUB_CACHE"), os.environ.get("HUGGINGFACE_HUB_CACHE"),
              os.path.join(os.environ["HF_HOME"], "hub") if os.environ.get("HF_HOME") else None,
-             os.path.expanduser("~/.cache/huggingface/hub"), "/content/model_cache",
-             "/content/model_cache", "./model_cache"]
+             os.path.expanduser("~/.cache/huggingface/hub"), "./model_cache"]
     rd = "models--" + REPO.replace("/", "--")
     for r in roots:
         if r and os.path.isdir(os.path.join(r, rd)):

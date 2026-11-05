@@ -42,6 +42,10 @@ class ReachMap:
     return any(design.get(f) != base.get(f) for f in self.fields_for(load, design))
 
   def identity(self, load, design) -> str:
-    """Designs with equal identity for a load are the same kernel for that load."""
+    """Declared lowering signature, assuming fields cover every build-affecting choice.
+
+    Validate that assumption against captured builds or compiled code with a fixed
+    compiler context before pooling measurements. This function does not inspect code.
+    """
     b = self.build_of(load, design)
     return json.dumps({"build": b, **{f: design.get(f) for f in self.fields_for(load, design)}}, sort_keys=True, default=str)
