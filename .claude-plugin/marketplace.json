@@ -10,8 +10,8 @@
   },
   "plugins": [
     {
-      "name": "xcalibur-method",
-      "source": "./plugins/xcalibur-method",
+      "name": "xcalibur",
+      "source": "./plugins/xcalibur",
       "description": "A coachable OODA loop for any experiment-driven work: you coach, Claude shows its reasoning at checkpoints (pre-registered predictions and falsifiers, noise floors, after-action reviews) and keeps your feedback in an append-only lessons file it reads every session. Plus a GPU inference/kernel speedup campaign skill with paired ABBA timing, A/A margins, screen-then-confirm, numerics gates and GPU discipline.",
       "version": "0.1.0",
       "category": "research",

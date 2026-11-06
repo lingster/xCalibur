@@ -1,4 +1,4 @@
-# xcalibur-method: Claude Code skills for xCalibur's research method
+# xcalibur: Claude Code skills for xCalibur's research method
 
 Two skills and one command that bring xCalibur's [OODA harness](https://github.com/xArmory/xCalibur/blob/main/docs/agents.md#ooda) and
 [reflections](https://github.com/xArmory/xCalibur/blob/main/docs/reflections.md) into Claude Code.
@@ -27,13 +27,13 @@ In Claude Code:
 
 ```text
 /plugin marketplace add xArmory/xCalibur
-/plugin install xcalibur-method@xcalibur
+/plugin install xcalibur@xcalibur
 ```
 
 Or in one step (Claude Code 2.1.275 or later):
 
 ```text
-/plugin install xcalibur-method --marketplace xArmory/xCalibur
+/plugin install xcalibur --marketplace xArmory/xCalibur
 ```
 
 A local checkout works for testing: `/plugin marketplace add ./path/to/xCalibur`. See also
