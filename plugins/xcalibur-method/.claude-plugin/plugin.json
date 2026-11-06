@@ -3,7 +3,7 @@
   "description": "xCalibur's research method for Claude Code. ooda-coach: you coach and Claude makes its reasoning coachable through Observe-Orient-Decide-Act, with pre-registered predictions and falsifiers, measured noise floors, written after-action reviews, one-line coaching checkpoints, and a dated, append-only LESSONS.md that it reads first every session, where your feedback is kept verbatim as top-precedence COACH rules and its own misses become candidate lessons. kernel-campaign: GPU inference and kernel speedup campaigns on top of ooda-coach, with paired ABBA timing, per-session A/A margins, clustered bootstrap intervals, screen-then-confirm, winner's-curse re-measurement, profile-and-ceiling first, quantised-numerics gates, GPU ownership rules and starter lessons from a real campaign.",
   "version": "0.1.0",
   "author": {
-    "name": "REPLACE-WITH-AUTHOR"
+    "name": "Pranshu Bahadur and Ling Li"
   },
   "homepage": "https://github.com/xArmory/xCalibur",
   "repository": "https://github.com/xArmory/xCalibur",
