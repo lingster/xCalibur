@@ -43,3 +43,14 @@ retained records; they do not make those original records publicly retrievable.
 The later notebooks read these public files directly. They need no access to
 private experiment directories. See the [notebook guide](../notebooks/README.md)
 and [evidence guide](../docs/studies.md#evidence).
+
+## Consumer-card prefill study
+
+| File | Contents | Scope |
+|---|---|---|
+| [kev_prefill_runs.csv](kev_prefill_runs.csv) | Run ids, paired median ratios with 90% intervals, margins, answer drift and decisions | RTX 3090, Kev-9B bf16, 16 pairs from 8 requests (intervals clustered by request); one interim RTX 6000 Ada FP8 row; pending rows stay empty |
+| [kev_prefill_profile.csv](kev_prefill_profile.csv) | Request split (state pass / rows) and state-pass CUDA time by kernel category | Profiled shares per workload, not timings of a candidate |
+| [w8a8_sm86_microbench.csv](w8a8_sm86_microbench.csv) | Paired W8A8 and bf16 `F.linear` timings per projection shape and M | Kernel microbenchmark on synthetic inputs; says nothing about model accuracy |
+| [w8a8_sm86_diagnosis.csv](w8a8_sm86_diagnosis.csv) | Per-layer, per-site activation range and INT8 error under plain, per-128 and SmoothQuant scales | One 28k-token request; fake-quantised error on a 1,024-token sample |
+
+See the [writeup](../docs/writeups/WRITEUP_SM86_SM89.md) and [W8A8 guide](../kernels/w8a8_sm86/README.md).

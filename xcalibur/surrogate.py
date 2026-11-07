@@ -7,6 +7,8 @@ where it is unsure. The ranker only orders what to measure; it never decides wha
 Useful features in our setting were exact and cheap: field one-hots, the bits of a decoder graph's code (which let
 the model generalize to graphs nobody has measured), compiled SASS counts, and quantities derived by the WarpSpeed
 checker (register cap, warps per scheduler, bytes in flight).
+
+Without LightGBM installed (``backend="auto"``), each member is a numpy ridge model instead (``Ridge``).
 """
 from __future__ import annotations
 
@@ -14,20 +16,34 @@ import numpy as np
 
 
 class Surrogate:
-  def __init__(self, members: int = 10, **lgbm):
+  """backend: "lightgbm", "ridge" (numpy only), or "auto" (LightGBM when importable, else ridge)."""
+
+  def __init__(self, members: int = 10, backend: str = "auto", **lgbm):
     self.members = members
+    self.backend = backend
     self.params = dict(n_estimators=200, learning_rate=0.05, num_leaves=8, min_child_samples=3,
                            colsample_bytree=0.8, subsample=0.9, subsample_freq=1, verbose=-1) | lgbm
     self.models = []
 
-  def fit(self, X, y, w=None):
+  def _member(self, seed: int):
+    if self.backend == "auto":
+      try:
+        import lightgbm                         # noqa: F401, PLC0415
+        self.backend = "lightgbm"
+      except ImportError:
+        self.backend = "ridge"
+    if self.backend == "ridge":
+      return Ridge()
     import lightgbm as lgb                      # noqa: PLC0415
+    return lgb.LGBMRegressor(random_state=seed, **self.params)
+
+  def fit(self, X, y, w=None):
     X, y = np.asarray(X, float), np.asarray(y, float)
     w = np.ones(len(y)) if w is None else np.asarray(w, float)
     self.models = []
     for s in range(self.members):
       i = np.random.default_rng(s).integers(0, len(y), len(y))
-      m = lgb.LGBMRegressor(random_state=s, **self.params)
+      m = self._member(s)
       m.fit(X[i], y[i], sample_weight=w[i])
       self.models.append(m)
     return self
@@ -45,6 +61,29 @@ class Surrogate:
     score, mu, sd = self.ucb(X, kappa, baseline)
     order = np.argsort(-score)[:k]
     return [(int(i), float(mu[i]), float(sd[i])) for i in order]
+
+
+class Ridge:
+  """A numpy-only stand-in member: weighted ridge regression on standardized features and their squares. Weaker
+  than boosted trees at interactions, but it ranks and its bootstrap spread still prices uncertainty."""
+
+  def __init__(self, alpha: float = 1.0):
+    self.alpha = alpha
+
+  def _expand(self, X):
+    Z = (X - self.mu) / self.sd
+    return np.hstack([Z, Z * Z, np.ones((len(Z), 1))])
+
+  def fit(self, X, y, sample_weight=None):
+    self.mu, self.sd = X.mean(0), X.std(0) + 1e-9
+    F = self._expand(X)
+    w = np.ones(len(y)) if sample_weight is None else sample_weight
+    A = F.T @ (F * w[:, None]) + self.alpha * np.eye(F.shape[1])
+    self.coef = np.linalg.solve(A, F.T @ (w * y))
+    return self
+
+  def predict(self, X):
+    return self._expand(np.asarray(X, float)) @ self.coef
 
 
 def bits(code: int, n: int = 32):

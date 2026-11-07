@@ -12,6 +12,9 @@ measured against, and the models, data and libraries we ran. Keys match the cita
 - <a id="cutlass"></a>**[CUTLASS]** NVIDIA. *CUTLASS and CuTe*, including PyCuTe. Layout algebra in the planner and the decoder layouts. [link](https://github.com/NVIDIA/cutlass)
 - <a id="cccl"></a>**[CCCL]** NVIDIA. *CUDA Core Compute Libraries (CCCL)*, WarpSpeed in `cub/detail/warpspeed`. The plan language and our checker's semantics. [link](https://github.com/NVIDIA/cccl)
 - <a id="ptx"></a>**[PTX]** NVIDIA. *Parallel Thread Execution ISA.* The PTX graph for retrieval. [link](https://docs.nvidia.com/cuda/parallel-thread-execution/)
+- <a id="cuda-pg"></a>**[CUDA-PG]** NVIDIA. *CUDA Programming Guide*, Compute Capabilities. Per-compute-capability limits in `warpspeed.ARCHS`. [link](https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/compute-capabilities.html)
+- <a id="ga102"></a>**[GA102]** NVIDIA. *NVIDIA Ampere GA102 GPU Architecture*, v2. RTX 3090 and RTX A6000 throughput. [link](https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.pdf)
+- <a id="ada"></a>**[Ada]** NVIDIA. *NVIDIA Ada GPU Architecture.* RTX 4090 and L40 throughput. [link](https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf)
 - <a id="flashinfer"></a>**[FlashInfer]** FlashInfer. Its warp-specialized MLP was one of the refiner's training examples. [link](https://github.com/flashinfer-ai/flashinfer)
 
 ## Baselines and starting points
@@ -24,6 +27,7 @@ measured against, and the models, data and libraries we ran. Keys match the cita
 
 - <a id="embeddinggemma-2025"></a>**[EmbeddingGemma 2025]** Google. *EmbeddingGemma: Powerful and Lightweight Text Representations.* arXiv:2509.20354, 2025. The embeddings for retrieval. [link](https://arxiv.org/abs/2509.20354)
 - <a id="lightgbm"></a>**[LightGBM]** Microsoft. *LightGBM.* The ranker in the measured game. [link](https://github.com/microsoft/LightGBM)
+- <a id="kev"></a>**[Kev]** J. Palmer. *Kev.* The Qwen3.5-hybrid decision classifier of the [sm_86/sm_89 prefill study](writeups/WRITEUP_SM86_SM89.md). [link](https://github.com/jaredpalmer/kev)
 - <a id="kernelbot"></a>**[KernelBot]** GPU MODE. *KernelBot data.* The public submissions in our knowledge base. [link](https://huggingface.co/datasets/GPUMODE/kernelbot-data)
 
 ## Search and games

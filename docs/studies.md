@@ -287,6 +287,41 @@ order is fit on demonstrations, solve query inputs, freeze predictions, then
 score against labels. The wider teacher-data and adapter branches are separate
 from this pilot and are not packaged as a general ARC solver.
 
+<a id="sm86-sm89"></a>
+## Consumer cards: prefill on sm_86 and sm_89
+
+A hybrid decision model scores 28k-token documents prefill-only: Kev-9B in bf16
+on an RTX 3090 for paired runs, Kev-27B in FP8 on RTX 6000 Ada cards in
+production. The contract changed in two places. The hardware lacks every Hopper
+feature the H200 plans relied on, and one complete operation is a whole model
+pass of seconds, not a microsecond kernel.
+
+A profile came before any kernel change. The largest state-pass GEMM already ran
+at about 95% of the 3090's dense bf16 peak (71 TFLOPS with fp32 accumulate on a
+GeForce board), so tuning had no headroom and the search moved to structure:
+
+```math
+\text{adopt}\iff \mathrm{CI}^{\mathrm{lo}}_{90}(\hat\rho)>m\ \land\ \mathrm{drift}\le g,
+\qquad m\ge 2\max\lvert\hat\rho_{A/A}-1\rvert .
+```
+
+The margin $`m`$ came from this card's own A/A runs (1.002 in one process, 1.003
+across model reloads), the interval from a bootstrap over requests rather than
+repeats, and the drift gate $`g`$ from the measured drift of fused against
+unfused kernels. Computing only the last layer's keys and values was exact and
+cleared the margin (1.034×); concatenated projections were a recorded null.
+Fused kernels ran 1.12× faster under FP8 on Ada, but FP8 amplified their
+one-ulp rounding differences past the answer gate, so production stayed
+unfused. Two lower-precision GEMM kits followed: block-FP8 tuning on sm_89 and
+INT8 W8A8 on sm_86, whose 1.84× end-to-end gain also failed the gate.
+
+**Available:** the [writeup](writeups/WRITEUP_SM86_SM89.md),
+[run summaries](../data/kev_prefill_runs.csv), [profile shares](../data/kev_prefill_profile.csv),
+[notebook 12](../notebooks/12_prefill_on_sm86_sm89.ipynb), the
+[FP8](../kernels/fp8_block_sm89/README.md) and [W8A8](../kernels/w8a8_sm86/README.md)
+kits, and the sm_86/sm_89 board profiles in [`warpspeed`](../xcalibur/warpspeed.py).
+The model's serving harness and run bundles are not distributed.
+
 <a id="evidence"></a>
 ## Reading and reproducing the evidence
 
@@ -314,7 +349,8 @@ graph queries and planner/refiner interfaces. [Getting started](getting-started.
 shows their contracts and dependencies.
 
 The [kernel directories](../kernels/README.md) distribute H200 MoE and Gemma 4
-SM120 implementations. Their guides identify runtime requirements and baselines.
+SM120 implementations, and the sm_89 block-FP8 and sm_86 W8A8 GEMM kits. Their
+guides identify runtime requirements and baselines.
 The full KB ingestion system, OODA controller, Rebel solver, native structural
 constructors, trained adapters and serving stack are documented research systems;
 they are not installed by the Python package.

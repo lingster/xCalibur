@@ -29,18 +29,45 @@ def geomean(xs) -> float:
   return math.exp(math.fsum(map(math.log, xs)) / len(xs))
 
 
-def bootstrap_ci(ratios, level: float = 0.95, n: int = 2000, seed: int = 0):
-  """Percentile bootstrap interval of the median of paired ratios."""
+def _cluster_groups(ratios, clusters):
+  clusters = list(clusters)
+  if len(clusters) != len(ratios):
+    raise ValueError(f"{len(clusters)} cluster labels for {len(ratios)} ratios")
+  groups = {}
+  for c, x in zip(clusters, ratios):
+    groups.setdefault(c, []).append(x)
+  return list(groups.values())
+
+
+def bootstrap_ci(ratios, level: float = 0.95, n: int = 2000, seed: int = 0, clusters=None):
+  """Percentile bootstrap interval of the median of paired ratios.
+
+  ``clusters`` (one label per ratio, e.g. the input or load id) resamples whole clusters instead of single ratios.
+  Repeats of one input are not independent: resampled one by one, they make the interval too narrow.
+  """
   ratios = _positive_values(ratios)
   if not 0 < level < 1 or not isinstance(n, int) or isinstance(n, bool) or n < 1:
     raise ValueError("level must lie in (0, 1) and n must be a positive integer")
   rng = random.Random(seed)
-  meds = sorted(statistics.median(rng.choices(ratios, k=len(ratios))) for _ in range(n))
+  if clusters is None:
+    meds = sorted(statistics.median(rng.choices(ratios, k=len(ratios))) for _ in range(n))
+  else:
+    groups = _cluster_groups(ratios, clusters)
+    meds = sorted(statistics.median([x for g in rng.choices(groups, k=len(groups)) for x in g]) for _ in range(n))
   def percentile(p):
     at = (n - 1) * p
     lo, hi = math.floor(at), math.ceil(at)
     return meds[lo] + (meds[hi] - meds[lo]) * (at - lo)
   return (percentile((1 - level) / 2), percentile((1 + level) / 2))
+
+
+def aa_margin(aa_ratios, k: float = 2.0, step: float = 0.0) -> float:
+  """Adoption threshold from A/A ratios (medians or CI ends): 1 + k * max|r - 1|, rounded up to ``step`` if given.
+
+  A candidate's CI lower bound must clear it.
+  """
+  m = 1.0 + k * max((abs(r - 1.0) for r in aa_ratios), default=0.0)
+  return round(math.ceil(round((m - 1.0) / step, 9)) * step + 1.0, 12) if step else m
 
 
 class Evidence:

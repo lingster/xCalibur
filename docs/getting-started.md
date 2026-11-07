@@ -45,7 +45,10 @@ print(result["smem"]["total_bytes"])     # 208992
 ```
 
 This uses the shipped H200 resource profile, which is the default for
-`warpspeed_check`; it does not check SM120 limits. It accounts for the declared
+`warpspeed_check`; it does not check SM120 limits. Pass `arch="rtx3090"`,
+`"a6000"`, `"rtx6000ada"`, `"l40s"` or `"rtx4090"` for the sm_86/sm_89
+[profiles](formulation.md#architecture-profiles); the plan above then fails with
+`tma_arch` and shared-memory counterexamples. It accounts for the declared
 rings and barriers. Include auxiliary shared storage when checking a complete
 plan; compiler allocation and native lifetime correctness need additional
 validation.
@@ -72,8 +75,8 @@ Installing an optional dependency does not install a production co-design agent.
 | [`gf2`](../xcalibur/gf2.py) | Linear bit maps and packing proofs |
 | [`warpspeed`](../xcalibur/warpspeed.py) | Resource and phase accounting |
 | [`reach`](../xcalibur/reach.py) | Which fields affect which compiled build |
-| [`bench`](../xcalibur/bench.py), [`stats`](../xcalibur/stats.py) | Paired timing, intervals and evidence pooling |
-| [`surrogate`](../xcalibur/surrogate.py), [`game`](../xcalibur/game.py) | Learned ranking and the callback-based search loop |
+| [`bench`](../xcalibur/bench.py), [`stats`](../xcalibur/stats.py) | Paired timing (graph replay and long calls), intervals (optionally clustered), A/A margins and evidence pooling |
+| [`surrogate`](../xcalibur/surrogate.py), [`game`](../xcalibur/game.py) | Learned ranking (LightGBM, or a numpy ridge fallback) and the callback-based search loop |
 | [`graph`](../xcalibur/graph.py) | Design relationships and retrieval |
 | [`planner`](../xcalibur/planner.py) | Model proposal/refinement interface |
 | [`capture`](../xcalibur/capture.py), [`gates`](../xcalibur/gates.py) | Captured-build identity and release checks |
@@ -99,11 +102,36 @@ default. The optional `null_us()` times a tiny-add graph, including real work;
 `subtract_null=True` needs a justified calibration and rejects nonpositive
 corrected times. Raw observations remain available.
 
+<a id="long-calls"></a>
+`LongBench` covers calls of milliseconds to seconds, such as a whole model pass,
+where graphs, the flush and the null replay do not apply. It keeps ABBA pairs,
+times each call with CUDA events plus wall time, runs a warm-up policy, and
+records an nvidia-smi snapshot per block of pairs:
+
+```python
+warm = xc.small_first({"candidate": lambda: new(short), "reference": lambda: old(short)})
+long = xc.LongBench(warmup=warm)
+result = long.paired(lambda: new(full), lambda: old(full), pairs=8, block=4)
+ratio, interval, clocks = result["ratio"], result["ci"], result["snapshots"]
+```
+
+`small_first` lets autotuning happen on a short input; tuning on a full-size one
+can exhaust a 24 GB card. Snapshots show whether a power-capped board's clock
+drifted within a block. When several inputs are timed repeatedly, pass
+`bootstrap_ci(ratios, clusters=input_ids)` so whole inputs are resampled rather
+than single ratios; the default call is unchanged. `aa_margin(aa_ratios, k=2,
+step=0.001)` turns A/A medians or interval ends into an adoption threshold that
+a candidate's lower bound must clear. The [sm_86/sm_89 study](studies.md#sm86-sm89)
+applies this protocol.
+
 `geomean` and `bootstrap_ci` require finite positive ratios. `Evidence.bind`
 uses a repeat-and-margin heuristic; it is separate from an interval test.
 `Game` records at most one confirmation per load and declared identity per round.
-Its reference remains fixed, and its measurement callback must return one complete
-load record per requested design. Changing the reference or measurement protocol
+Its reference remains fixed, and its measurement callback must return one load
+record per requested design: the reference covers every load, and another design
+every load it reaches (a per-size build that does not apply to a size has nothing
+to time there). `Game.confirm(designs)` applies the round's confirmation step to
+designs chosen outside a round, such as seed-screen leaders. Changing the reference or measurement protocol
 requires fresh evidence. The [search chapter](search.md#measured-search) explains
 the policy around those interfaces.
 

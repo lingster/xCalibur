@@ -20,7 +20,9 @@ experiments. Read them in order, or enter at the question you care about.
 4. **[Studies](studies.md)** — Where did these ideas meet an implementation?
    [Gemma 4 / TG4DAC](studies.md#gemma4), [H200 MoE](studies.md#h200),
    [structural construction](studies.md#structural-search),
-   [complete operators](studies.md#complete-operators) and [ARC](studies.md#arc).
+   [complete operators](studies.md#complete-operators), [ARC](studies.md#arc) and
+   [prefill on sm_86/sm_89](studies.md#sm86-sm89), with its
+   [writeup](writeups/WRITEUP_SM86_SM89.md).
 
 Each chapter defines its notation and distinguishes a formulation, its
 implementation, and the evidence collected from it. Equations and worked

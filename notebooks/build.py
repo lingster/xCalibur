@@ -13,6 +13,7 @@ import nbformat as nbf
 from nbclient import NotebookClient
 from jupyter_client import KernelManager
 from research import notebooks as research_notebooks
+from sm86_sm89 import notebooks as sm86_sm89_notebooks
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -627,6 +628,7 @@ pd.DataFrame(rows)"""),
 
 
 NB.update(research_notebooks(SETUP))
+NB.update(sm86_sm89_notebooks(SETUP))
 
 EVIDENCE = {
   "01": "CPU linear-map proof with recorded production-search counts; the CUDA enumerator is not run here.",
