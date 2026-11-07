@@ -48,8 +48,8 @@ Changing the reference, workload or protocol starts a new comparison; old ratios
   ratios treats repeats as independent and makes the CI too narrow. Stratify by shape only when every stratum has
   ≥5 inputs (stratifying 1–2-input shapes also narrows the CI falsely).
 - Report: median ratio [90% CI], token- or time-weighted ratio [CI], per-shape ratios, throughput both sides, n pairs.
-- `xcalibur.bootstrap_ci` gives percentile intervals; the clustered form (`clusters=`) is in the sm_86/sm_89 port if
-  available. Otherwise group by cluster and resample groups by hand.
+- `xcalibur.bootstrap_ci` gives percentile intervals; `bootstrap_ci(ratios, clusters=ids)` resamples whole inputs.
+  Without the package, group by cluster and resample groups by hand.
 
 ## 5. Screen → confirm → bind
 
@@ -68,8 +68,8 @@ Changing the reference, workload or protocol starts a new comparison; old ratios
 
 | Scale | Use | Notes |
 |---|---|---|
-| µs kernels | `xcalibur.Bench`: CUDA graphs, cold-L2 **read** flush (a write flush charges dirty write-back to the kernel), optional null-replay subtraction | Match the judge or production timer; check the bench against it on a known pair |
-| ms–s passes | Plain ABBA with warm-up, CUDA events + wall clock; `LongBench` if available | Graphs, flush and null replay are irrelevant at seconds |
+| µs kernels | `xcalibur.Bench`: CUDA graphs, cold-L2 **read** flush (a write flush charges dirty write-back to the kernel); null-replay subtraction off by default, on only with a calibration that matches the judge's timer | Match the judge or production timer; check the bench against it on a known pair |
+| ms–s passes | Plain ABBA with warm-up, CUDA events + wall clock; `LongBench` | Graphs, flush and null replay are irrelevant at seconds |
 | End to end | Production's replay (e.g. HTTP) | The final arbiter; calibrate the in-process harness against it |
 
 Separate device from host: compare CUDA-event time with wall time, and eager with CUDA-graph replay. GPU-busy % per

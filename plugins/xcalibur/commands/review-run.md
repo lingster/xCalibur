@@ -19,6 +19,8 @@ Target run: $ARGUMENTS (if empty, the newest ledger entry or run directory that 
 4. If the decision adopts or rejects a change, or the run was a surprise, show the checkpoint (C1 or C2 format) and
    end with a one-line request, e.g. "Coach: anything to correct before I adopt X?". Record the coach's answer
    verbatim as a COACH entry or verdict addendum. If no coach is available, mark the checkpoint `uncoached`.
-5. Update `STATUS.md` if the decision changed the current best or the next steps.
+5. Update `STATUS.md` if the decision changed the current best or the next steps, and refresh the knowledge records
+   the run touched (claims tested, design-graph node with its evidence grade; see the skill's `knowledge.md`).
+6. If this is the third null-or-worse result on one mechanism, say an AAR is due before another brief on it.
 
 Keep it to one screen.

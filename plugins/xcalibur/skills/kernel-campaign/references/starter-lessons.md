@@ -1,4 +1,4 @@
-# Starter rules for kernel campaigns (K-01…K-13)
+# Starter rules for kernel campaigns (K-01…K-17)
 
 Each rule came from a miss or near-miss in a real two-GPU inference campaign (a 9B bf16 model on an RTX 3090 and its
 27B FP8 sibling on RTX 6000 Ada cards; long-document prefill). Run ids are that campaign's. Copy the applicable ones
@@ -119,3 +119,37 @@ change, C4 session end).
 - **Check:** Before a run starts, verify the ledger entry (or run script header) holds the prediction with range,
   its analog, the falsifier and the decision rule. A run without them is `unregistered`.
 - **Scope:** every run.
+
+---
+
+K-14…K-17 come from xCalibur's other studies (the sm_86/89 writeup, the H200 MoE AUTORESEARCH game and TG4DAC), not
+from the two-GPU campaign above. General versions of many K-rules for non-GPU work: `ooda-coach`'s
+[starter-rules.md](../../ooda-coach/references/starter-rules.md).
+
+## K-14 · An automated decision uses the margin of the mode that actually ran
+- **Incident:** run K4 (sm_86/89 writeup). The run table said ADOPT against the same-process margin (1.002); the
+  blocks-mode run needed the blocks margin (1.003), under which the result was a null.
+- **Check:** Before a script or agent records adopt/reject, verify the margin it compared against came from an A/A
+  in the same mode (same-process vs reload blocks) and session.
+- **Scope:** every automated decision on paired timing. Checkpoint C1.
+
+## K-15 · Identical artifact ⇒ no-op: diff before timing
+- **Incident:** H200 MoE game. 8 of 9 screened plans produced byte-identical target builds yet "moved" ±1.4%; later
+  the game diffed SASS and caught 38 no-ops and 18 compile contradictions among 325 archived designs before any GPU time.
+- **Check:** Before timing a candidate, verify its captured build inputs (`Capture.same`) or SASS differ from the
+  parent's for the load it targets; identical ⇒ record "exact no-op", don't time it, and tell the proposer.
+- **Scope:** all candidate timing. Checkpoint C2 if a no-op was already timed and "won".
+
+## K-16 · A plan that passes accounting can still spill: inspect the compiled allocation
+- **Incident:** TG4DAC Altair MLP. The design assumed 224 registers for a 9-warp kernel; the launch cap is 168, and
+  the compiled kernel spilled. The checker counts registers but does not compile.
+- **Check:** Before attributing a result to a passed plan, verify the compiled registers, spills and occupancy
+  (SASS / `-Xptxas -v`), and recompute the register cap for the warp count.
+- **Scope:** warp-specialised and register-heavy kernels.
+
+## K-17 · Check the baseline isn't on a fallback path
+- **Incident:** TG4DAC end to end. vLLM ran a generic Triton attention kernel because the model mixed head sizes 256
+  and 512; part of the measured headroom was the fallback, and one decode shape still favoured the simpler kernel.
+- **Check:** Before claiming headroom or a speedup over a framework, verify which kernel the baseline actually
+  dispatches for each shape (profiler trace or logs), and say so in the ledger.
+- **Scope:** comparisons against serving frameworks and libraries. Checkpoint C3 before a campaign is planned on it.

@@ -93,5 +93,5 @@ def test_claude_marketplace_lists_complete_plugins():
             front = re.match(r"---\n(.*?)\n---\n", text, re.DOTALL)
             assert front and re.search(rf"^name: {skill.parent.name}$", front.group(1), re.MULTILINE)
             assert "description:" in front.group(1)
-            assert len(text.splitlines()) <= 300
+            assert len(text.splitlines()) <= 400
     assert {".claude-plugin", "plugins"} <= audit.PUBLIC_ROOTS

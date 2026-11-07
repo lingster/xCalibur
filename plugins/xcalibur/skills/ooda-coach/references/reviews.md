@@ -27,7 +27,10 @@ user asking "why isn't this working?".
 - Find the **habit** behind the repeated failure (e.g. "kept tuning the component we'd already measured at the
   ceiling", "kept trusting the proxy").
 - Output: a candidate lesson expressed as a check (for the coach to confirm), and a scoped decision per branch: **open**, **parked** (reason + restore
-  path) or **closed** (only with a witness covering the whole branch, not a sampled loss).
+  path) or **closed** (only with a witness covering the whole branch, not a sampled loss; see
+  [agenda.md](agenda.md#7-what-may-close-a-branch)).
+- The mechanism stays **blocked** until a new brief on it cites this AAR by id and says what is different now.
+- If several edits left the result unchanged, the AAR's next step is an **instrument**, not another hypothesis.
 
 ## RAP: reset and pivot
 
@@ -47,7 +50,13 @@ Pause execution and ask whether the method is learning:
 - Did retrieved knowledge change any estimate, or was it only cited?
 - Did a narrow negative result become a veto on a whole family?
 - Did a lesson change the next decision? Did a later correction reach every place the lesson was used?
+- Did narrowing an old negative make a new prediction optimistic? (De-biasing works in both directions.)
+- Is a design family being priced by a model calibrated on a different family?
 
-Group the history by **what was physically varied** (structure, precision, schedule), not by the latest proposal's
-name; repeated assumptions become visible that way. Keep the reflection as written; add later corrections as
-addenda.
+Group the history by **what was physically varied** (structure, precision, schedule, data, prompt wording), not by
+the latest proposal's name; repeated assumptions become visible that way. Keep the reflection as written; add later
+corrections as addenda.
+
+Trigger: a campaign milestone, a RAP, or every few sessions. Record it in its own file (`REFLECTIONS.md`) with:
+scope (campaigns and source revisions covered), patterns the evidence supports, **competing interpretations**,
+**unresolved strategic choices**, and follow-ups linked to the agenda or a RAP.
